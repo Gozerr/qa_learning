@@ -16,6 +16,7 @@ let editingArticleId = null;
 let activeSection = "theory";
 let activeCategory = null;
 let authMode = "password";
+let showCompletedOnly = false;
 
 const normalize = (value = "") => value.trim().toLowerCase();
 const escapeHtml = (value = "") => String(value).replace(/[&<>"']/g, (character) => ({
@@ -102,6 +103,7 @@ async function showApp(user) {
   $("#article-add-button").classList.toggle("hidden", !currentMember.is_admin);
   await Promise.all([loadProfile(), loadProgress()]);
   await loadMaterials();
+  renderDashboard();
 }
 
 async function loadMaterials() {
@@ -113,6 +115,7 @@ async function loadMaterials() {
   materials = data || [];
   setupNavigation();
   renderMaterials();
+  renderDashboard();
 }
 
 $("#auth-mode-toggle").addEventListener("click", () => {
@@ -162,6 +165,7 @@ function renderMaterials() {
     const itemSection = item.section || "theory";
     return itemSection === activeSection
       && (!activeCategory || item.category === activeCategory)
+      && (!showCompletedOnly || completedArticles.has(String(item.id)))
       && `${item.title} ${item.description} ${item.category}`.toLowerCase().includes(query);
   });
   $("#materials-grid").innerHTML = filtered.map((item, index) => {
@@ -171,6 +175,25 @@ function renderMaterials() {
   }).join("");
   $("#empty-state").classList.toggle("hidden", filtered.length > 0);
   document.querySelectorAll(".material-card").forEach((card) => card.addEventListener("click", () => openArticle(card.dataset.id)));
+}
+
+function renderDashboard() {
+  const published = materials.filter((item) => item.status !== "draft");
+  const completed = published.filter((item) => completedArticles.has(String(item.id))).length;
+  const percent = published.length ? Math.round((completed / published.length) * 100) : 0;
+  const next = published.find((item) => !completedArticles.has(String(item.id)));
+  $("#progress-percent").textContent = `${percent}%`;
+  $("#progress-bar").style.width = `${percent}%`;
+  $("#completed-count").textContent = completed;
+  $("#total-count").textContent = published.length;
+  $("#practice-count").textContent = published.filter((item) => item.section === "practice").length;
+  $("#next-lesson-title").textContent = next?.title || "Все материалы изучены";
+  $("#progress-caption").textContent = next
+    ? `${published.length - completed} ${published.length - completed === 1 ? "тема ждёт" : "темы ждут"} твоего внимания`
+    : "Отличный результат — база пройдена";
+  $("#dashboard-greeting").textContent = profile?.display_name
+    ? `Привет, ${profile.display_name}! Выбирай тему и превращай знания о тестировании в уверенную практику.`
+    : "Структурированная база знаний, которая помогает превратить теорию тестирования в уверенную практику.";
 }
 
 function setupNavigation() {
@@ -191,6 +214,19 @@ $("#theory-link").addEventListener("click", () => {
   activeSection = "theory";
   activeCategory = null;
   renderMaterials();
+});
+
+$("#completed-filter").addEventListener("click", () => {
+  showCompletedOnly = !showCompletedOnly;
+  $("#completed-filter").textContent = showCompletedOnly ? "Изученные" : "Все материалы";
+  $("#completed-filter").classList.toggle("filter-button--active", showCompletedOnly);
+  renderMaterials();
+});
+
+$("#continue-learning").addEventListener("click", () => {
+  const next = materials.find((item) => item.status !== "draft" && !completedArticles.has(String(item.id)));
+  if (next) openArticle(next.id);
+  else $("#library").scrollIntoView({ behavior: "smooth" });
 });
 
 async function openArticle(id) {
@@ -222,6 +258,7 @@ async function markCompleted(item) {
   $("#complete-article-button").textContent = "✓ Материал пройден";
   $("#complete-article-button").className = "button button--secondary article-complete-button";
   renderMaterials();
+  renderDashboard();
 }
 
 function checkQuiz() {
