@@ -67,7 +67,7 @@ on conflict (email) do update set is_admin = true;
 insert into public.articles (section, category, title, description, content, read_time, color, icon, sort_order)
 select seed.section, seed.category, seed.title, seed.description, seed.content, seed.read_time, seed.color, seed.icon, seed.sort_order
 from (values
-  ('theory', 'Основы', 'Тестирование: определение, цели и принципы',
+  ('theory', 'Что такое тестирование', 'Тестирование: определение, цели и принципы',
     'Что именно проверяет тестировщик, зачем это нужно бизнесу и почему тестирование не доказывает отсутствие дефектов.',
     '<h3>Определение</h3><p><strong>Тестирование</strong> — это исследование продукта и его документации, во время которого команда получает информацию о качестве и рисках. Тестировщик сравнивает фактическое поведение с ожиданиями, но не может доказать, что дефектов совсем нет.</p><h3>Цели</h3><ul><li>найти проблемы до того, как они затронут пользователя;</li><li>дать команде проверяемую информацию для решения о релизе;</li><li>снизить риски потери денег, данных и доверия пользователей;</li><li>проверить, что продукт решает задачу, а не только работает без ошибок.</li></ul><h3>Принципы</h3><p>Тестирование показывает наличие дефектов, а не их отсутствие. Проверить всё невозможно, поэтому проверки выбирают по риску. Чем раньше команда тестирует требования и дизайн, тем дешевле исправление. Дефекты распределяются неравномерно, а повтор одних и тех же проверок со временем теряет эффективность. Контекст важен: для банковского платежа и для игры нужны разные глубина и виды тестов.</p><h3>Пример</h3><p>Для интернет-магазина важно проверить не только кнопку <em>Оплатить</em>, но и списание ровно один раз, возврат после ошибки банка и понятное сообщение пользователю.</p>',
     '10 мин', 'purple', '◉', 10),
@@ -100,6 +100,13 @@ where not exists (
   select 1 from public.articles existing
   where existing.section = seed.section and existing.title = seed.title
 );
+
+-- Normalize the first theory topic for databases created by an older version.
+update public.articles
+set category = 'Что такое тестирование',
+    updated_at = now()
+where section = 'theory'
+  and title = 'Тестирование: определение, цели и принципы';
 
 insert into public.articles (section, category, title, description, content, read_time, color, icon, sort_order)
 select seed.section, seed.category, seed.title, seed.description, seed.content, seed.read_time, seed.color, seed.icon, seed.sort_order
