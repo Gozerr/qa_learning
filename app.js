@@ -15,6 +15,7 @@ let completedArticles = new Set();
 let editingArticleId = null;
 let activeSection = "theory";
 let activeCategory = null;
+let authMode = "password";
 
 const normalize = (value = "") => value.trim().toLowerCase();
 const escapeHtml = (value = "") => String(value).replace(/[&<>"']/g, (character) => ({
@@ -38,7 +39,6 @@ function clearAuthCallbackUrl(removeHash = false) {
   if (removeHash) url.hash = "";
   window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
 }
-
 function isExpiredAuthError(error) {
   const message = String(error?.message || error || "").toLowerCase();
   return message.includes("expired") || message.includes("invalid token")
@@ -115,6 +115,13 @@ async function loadMaterials() {
   renderMaterials();
 }
 
+$("#auth-mode-toggle").addEventListener("click", () => {
+  authMode = authMode === "password" ? "magic" : "password";
+  $("#password").classList.toggle("hidden", authMode !== "password");
+  $("#password").required = authMode === "password";
+  $("#auth-mode-toggle").textContent = authMode === "password" ? "Войти по ссылке из email" : "Войти по паролю";
+});
+
 $("#access-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const email = normalize($("#email").value);
@@ -127,7 +134,14 @@ $("#access-form").addEventListener("submit", async (event) => {
     }
     return;
   }
-  const { error } = await db.auth.signInWithOtp({ email, options: { emailRedirectTo: getAuthRedirectUrl() } });
+  const result = authMode === "password"
+    ? await db.auth.signInWithPassword({ email, password: $("#password").value })
+    : await db.auth.signInWithOtp({ email, options: { emailRedirectTo: getAuthRedirectUrl() } });
+  const error = result.error;
+  if (authMode === "password" && error) {
+    showMessage($("#access-message"), "Не удалось войти по паролю. Если пароль ещё не задан, переключитесь на вход по ссылке из email один раз и задайте пароль в профиле.");
+    return;
+  }
   if (error?.status === 429 || error?.message?.toLowerCase().includes("rate limit")) {
     showMessage($("#access-message"), "Сервис временно ограничил отправку писем. Проверьте, не запрашивали ли вы письмо недавно, и повторите через несколько минут.");
     return;
@@ -246,6 +260,7 @@ $("#search-input").addEventListener("input", renderMaterials);
 
 $("#profile-button").addEventListener("click", () => {
   $("#profile-name-input").value = profile?.display_name || "";
+  $("#profile-password-input").value = "";
   $("#profile-modal").classList.remove("hidden");
 });
 
@@ -263,6 +278,14 @@ $("#profile-form").addEventListener("submit", async (event) => {
     }
     avatarUrl = db.storage.from("avatars").getPublicUrl(path).data.publicUrl;
   }
+  const password = $("#profile-password-input").value;
+  if (password) {
+    const passwordUpdate = await db.auth.updateUser({ password });
+    if (passwordUpdate.error) {
+      showMessage($("#profile-message"), `Не удалось сохранить пароль: ${passwordUpdate.error.message}`);
+      return;
+    }
+  }
   const { data, error } = await db.from("profiles").upsert({ id: currentUser.id, email: currentUser.email, display_name: $("#profile-name-input").value.trim(), avatar_url: avatarUrl, updated_at: new Date().toISOString() }).select().single();
   if (error) {
     showMessage($("#profile-message"), error.message);
@@ -270,7 +293,7 @@ $("#profile-form").addEventListener("submit", async (event) => {
   }
   profile = data;
   renderProfile();
-  showMessage($("#profile-message"), "Профиль сохранён.", true);
+  showMessage($("#profile-message"), password ? "Профиль и пароль сохранены." : "Профиль сохранён.", true);
 });
 
 $("#admin-button").addEventListener("click", async () => {
@@ -494,6 +517,7 @@ db.auth.onAuthStateChange((event, session) => {
     $("#admin-button").classList.add("hidden");
     $("#article-add-button").classList.add("hidden");
     $("#email").value = "";
+    $("#password").value = "";
     return;
   }
   if (session?.user) setTimeout(() => handleAuthSession(session), 0);
