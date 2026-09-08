@@ -1,6 +1,9 @@
 const SUPABASE_URL = "https://hberfcawhmudegydhtnb.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_W99wvJK_aI_NOhLx9-y8TQ_tx9FQct_";
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const DEPLOYED_SITE_URL = "https://gozerr.github.io/qa_learning/";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { detectSessionInUrl: false },
+});
 const $ = (selector) => document.querySelector(selector);
 const accessScreen = $("#access-screen");
 const app = $("#app");
@@ -21,6 +24,34 @@ const showMessage = (element, text, success = false) => {
   element.textContent = text;
   element.style.color = success ? "#4f8b55" : "";
 };
+const getAuthRedirectUrl = () => {
+  const { hostname, origin, pathname } = window.location;
+  if (hostname.endsWith(".github.io")) return `${origin}${pathname}`;
+  if (hostname === "localhost" || hostname === "127.0.0.1" || origin === "null") return DEPLOYED_SITE_URL;
+  return `${origin}${pathname}`;
+};
+const authLinkExpiredMessage = "Ссылка устарела или уже использована. Запросите новое письмо и откройте последнюю ссылку.";
+
+function clearAuthCallbackUrl(removeHash = false) {
+  const url = new URL(window.location.href);
+  ["code", "error", "error_code", "error_description"].forEach((key) => url.searchParams.delete(key));
+  if (removeHash) url.hash = "";
+  window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+}
+
+function isExpiredAuthError(error) {
+  const message = String(error?.message || error || "").toLowerCase();
+  return message.includes("expired") || message.includes("invalid token")
+    || message.includes("already been used") || message.includes("otp_expired")
+    || message.includes("access_denied");
+}
+
+function showAuthCallbackError(error) {
+  const message = isExpiredAuthError(error)
+    ? authLinkExpiredMessage
+    : `Не удалось открыть ссылку для входа: ${error?.message || error}.`;
+  showMessage($("#access-message"), message);
+}
 
 async function isAllowed(user) {
   const { data, error } = await db.from("access_members").select("id,email,is_admin").eq("email", normalize(user.email)).maybeSingle();
@@ -96,9 +127,9 @@ $("#access-form").addEventListener("submit", async (event) => {
     }
     return;
   }
-  const { error } = await db.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin + window.location.pathname } });
+  const { error } = await db.auth.signInWithOtp({ email, options: { emailRedirectTo: getAuthRedirectUrl() } });
   if (error?.status === 429 || error?.message?.toLowerCase().includes("rate limit")) {
-    showMessage($("#access-message"), "Активная сессия не найдена. Откройте уже полученную ссылку из письма или повторите попытку позже.");
+    showMessage($("#access-message"), "Сервис временно ограничил отправку писем. Проверьте, не запрашивали ли вы письмо недавно, и повторите через несколько минут.");
     return;
   }
   showMessage($("#access-message"), error ? `Не удалось отправить письмо: ${error.message}` : "Проверьте почту и перейдите по ссылке из письма.", !error);
@@ -412,6 +443,46 @@ async function handleAuthSession(session) {
   }
 }
 
+async function restoreAuthFromCallback() {
+  const queryParams = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const callbackError = queryParams.get("error_description") || queryParams.get("error")
+    || queryParams.get("error_code") || hashParams.get("error_description")
+    || hashParams.get("error") || hashParams.get("error_code");
+  if (callbackError) {
+    clearAuthCallbackUrl(Boolean(window.location.hash));
+    showAuthCallbackError(callbackError);
+    return null;
+  }
+
+  const code = queryParams.get("code");
+  if (code) {
+    const { data, error } = await db.auth.exchangeCodeForSession(code);
+    clearAuthCallbackUrl();
+    if (error) {
+      showAuthCallbackError(error);
+      return null;
+    }
+    return data.session;
+  }
+
+  const accessToken = hashParams.get("access_token");
+  const refreshToken = hashParams.get("refresh_token");
+  if (accessToken && refreshToken) {
+    const { data, error } = await db.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+    clearAuthCallbackUrl(true);
+    if (error) {
+      showAuthCallbackError(error);
+      return null;
+    }
+    return data.session;
+  }
+  return null;
+}
+
 db.auth.onAuthStateChange((event, session) => {
   if (event === "SIGNED_OUT") {
     authUserHandled = null;
@@ -428,10 +499,18 @@ db.auth.onAuthStateChange((event, session) => {
   if (session?.user) setTimeout(() => handleAuthSession(session), 0);
 });
 
-db.auth.getSession().then(({ data, error }) => {
-  if (error) {
-    showMessage($("#access-message"), `Ошибка восстановления сессии: ${error.message}`);
-    return;
+async function initializeAuth() {
+  try {
+    const callbackSession = await restoreAuthFromCallback();
+    const { data, error } = await db.auth.getSession();
+    if (error) {
+      showMessage($("#access-message"), `Ошибка восстановления сессии: ${error.message}`);
+      return;
+    }
+    await handleAuthSession(callbackSession || data.session);
+  } catch (error) {
+    showAuthCallbackError(error);
   }
-  handleAuthSession(data.session);
-});
+}
+
+initializeAuth();
