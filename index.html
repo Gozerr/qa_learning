@@ -41,8 +41,6 @@
       <header class="topbar">
         <a class="brand" href="#" aria-label="QA Base — на главную"><span class="brand-mark">✓</span><span>QA<span class="brand-accent">Base</span></span></a>
         <nav class="topnav" aria-label="Основная навигация">
-          <a id="theory-link" class="topnav-link topnav-link--active" href="#library">Теория тестирования</a>
-          <div class="nav-dropdown"><button class="topnav-link nav-dropdown-toggle" type="button">Практика <span>⌄</span></button><div id="practice-menu" class="nav-dropdown-menu"></div></div>
           <a class="topnav-link" href="#about">О базе</a>
         </nav>
         <div class="user-menu">
@@ -74,6 +72,7 @@
           <aside class="library-sidebar">
             <div class="sidebar-heading"><div><p class="eyebrow">Библиотека</p><h2>Учебный план</h2></div><span id="sidebar-count" class="sidebar-count">0</span></div>
             <label class="search sidebar-search"><span>⌕</span><input id="search-input" type="search" placeholder="Найти тему..." /></label>
+            <nav id="sidebar-sections" class="sidebar-sections" aria-label="Разделы библиотеки"></nav>
             <div class="sidebar-filters"><button id="completed-filter" class="filter-button" type="button">Все материалы</button></div>
             <div id="category-filters" class="category-filters hidden"></div>
             <div id="materials-grid" class="materials-list"></div>

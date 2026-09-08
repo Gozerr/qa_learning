@@ -199,24 +199,28 @@ function renderDashboard() {
 }
 
 function setupNavigation() {
-  const practiceCategories = [...new Set(materials.filter((item) => item.section === "practice").map((item) => item.category))];
-  $("#practice-menu").innerHTML = [
-    '<button type="button" data-section="practice" data-category="">Все практические задания</button>',
-    ...practiceCategories.map((category) => `<button type="button" data-section="practice" data-category="${escapeHtml(category)}">${escapeHtml(category)}</button>`),
-  ].join("");
-  document.querySelectorAll("#practice-menu button").forEach((button) => button.addEventListener("click", () => {
+  const sections = [
+    { id: "theory", title: "Теория тестирования", icon: "▣" },
+    { id: "practice", title: "Практика", icon: "✓" },
+  ];
+  $("#sidebar-sections").innerHTML = sections.map((section) => {
+    const categories = [...new Set(materials
+      .filter((item) => (item.section || "theory") === section.id)
+      .map((item) => item.category)
+      .filter(Boolean))];
+    return `<div class="sidebar-section"><button class="sidebar-section-button ${activeSection === section.id ? "active" : ""}" type="button" data-section="${section.id}"><span class="sidebar-section-icon">${section.icon}</span><span>${section.title}</span><strong>${materials.filter((item) => (item.section || "theory") === section.id).length}</strong></button><div class="sidebar-categories ${activeSection === section.id ? "" : "hidden"}"><button type="button" class="${!activeCategory && activeSection === section.id ? "active" : ""}" data-section="${section.id}" data-category="">Все материалы</button>${categories.map((category) => `<button type="button" class="${activeCategory === category && activeSection === section.id ? "active" : ""}" data-section="${section.id}" data-category="${escapeHtml(category)}">${escapeHtml(category)}</button>`).join("")}</div></div>`;
+  }).join("");
+  document.querySelectorAll("#sidebar-sections button").forEach((button) => button.addEventListener("click", () => {
     activeSection = button.dataset.section;
     activeCategory = button.dataset.category || null;
+    activeArticleId = null;
+    $("#article-content").classList.add("hidden");
+    $("#reader-empty").classList.remove("hidden");
+    setupNavigation();
     renderMaterials();
     $("#library").scrollIntoView({ behavior: "smooth" });
   }));
 }
-
-$("#theory-link").addEventListener("click", () => {
-  activeSection = "theory";
-  activeCategory = null;
-  renderMaterials();
-});
 
 $("#completed-filter").addEventListener("click", () => {
   showCompletedOnly = !showCompletedOnly;
