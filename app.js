@@ -372,6 +372,8 @@ async function openAdminModal(mode) {
 function resetArticleForm() {
   editingArticleId = null;
   $("#article-form").reset();
+  $("#article-content-input").innerHTML = "";
+  updateArticlePreview();
   $("#article-form-heading").textContent = "Новый материал";
   $("#article-submit").textContent = "Опубликовать материал";
   $("#article-cancel-edit").classList.add("hidden");
@@ -387,7 +389,8 @@ function openArticleEditor(item) {
   $("#article-time-input").value = item.read_time || "";
   $("#article-order-input").value = item.sort_order || 0;
   $("#article-description-input").value = item.description;
-  $("#article-content-input").value = item.content;
+  $("#article-content-input").innerHTML = item.content;
+  updateArticlePreview();
   $("#article-color-input").value = item.color || "purple";
   $("#article-image-input").value = item.image_url || "";
   $("#article-draft-input").checked = item.status === "draft";
@@ -399,6 +402,37 @@ function openArticleEditor(item) {
   $("#article-title-input").focus();
 }
 $("#article-cancel-edit").addEventListener("click", resetArticleForm);
+
+function updateArticlePreview() {
+  $("#article-live-preview").innerHTML = $("#article-content-input").innerHTML || "<p>Предпросмотр появится здесь.</p>";
+}
+
+document.querySelectorAll("[data-command]").forEach((button) => button.addEventListener("mousedown", (event) => {
+  event.preventDefault();
+  $("#article-content-input").focus();
+  document.execCommand(button.dataset.command, false, button.dataset.value || null);
+  updateArticlePreview();
+}));
+$("#article-content-input").addEventListener("input", updateArticlePreview);
+
+$("#editor-image-button").addEventListener("click", () => $("#editor-image-file").click());
+$("#editor-image-file").addEventListener("change", async () => {
+  const file = $("#editor-image-file").files[0];
+  if (!file) return;
+  const path = `${currentUser.id}/${crypto.randomUUID()}.${file.name.split(".").pop().toLowerCase() || "jpg"}`;
+  showMessage($("#article-message"), "Загрузка изображения...");
+  const upload = await db.storage.from("article-images").upload(path, file, { contentType: file.type });
+  if (upload.error) {
+    showMessage($("#article-message"), `Не удалось загрузить изображение: ${upload.error.message}`);
+    return;
+  }
+  const imageUrl = db.storage.from("article-images").getPublicUrl(path).data.publicUrl;
+  $("#article-content-input").focus();
+  document.execCommand("insertHTML", false, `<p><img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(file.name)}"></p>`);
+  $("#editor-image-file").value = "";
+  updateArticlePreview();
+  showMessage($("#article-message"), "Изображение вставлено.", true);
+});
 
 function renderAdminArticles() {
   $("#admin-articles-list").innerHTML = `<h3>Материалы и порядок</h3>${materials.map((item, index) => `<div class="admin-article-row"><span><strong>${escapeHtml(item.title)}</strong><small>${item.status === "draft" ? "Черновик" : "Опубликован"} · порядок ${item.sort_order || 0}</small></span><span><button type="button" class="tiny-button edit-admin-article" data-id="${item.id}">Изменить</button><button type="button" class="tiny-button move-admin-article" data-id="${item.id}" data-direction="-1" ${index === 0 ? "disabled" : ""}>↑</button><button type="button" class="tiny-button move-admin-article" data-id="${item.id}" data-direction="1" ${index === materials.length - 1 ? "disabled" : ""}>↓</button><button type="button" class="tiny-button delete-admin-article" data-id="${item.id}">Удалить</button></span></div>`).join("")}`;
@@ -487,7 +521,7 @@ $("#article-form").addEventListener("submit", async (event) => {
     section: $("#article-section-input").value,
     title: $("#article-title-input").value.trim(),
     description: $("#article-description-input").value.trim(),
-    content: $("#article-content-input").value.trim(),
+    content: $("#article-content-input").innerHTML.trim(),
     read_time: $("#article-time-input").value.trim(),
     sort_order: Number($("#article-order-input").value) || 0,
     status: $("#article-draft-input").checked ? "draft" : "published",
@@ -503,10 +537,14 @@ $("#article-form").addEventListener("submit", async (event) => {
     return;
   }
   const wasEditing = Boolean(editingArticleId);
+  const savedArticleId = editingArticleId;
   resetArticleForm();
   showMessage($("#article-message"), wasEditing ? "Изменения сохранены." : "Материал опубликован.", true);
   await loadMaterials();
   renderAdminArticles();
+  if (wasEditing && activeArticleId === String(savedArticleId)) {
+    await openArticle(savedArticleId);
+  }
 });
 
 let authUserHandled = null;
