@@ -29,6 +29,7 @@ async function showApp(user) {
   accessScreen.classList.add("hidden");
   app.classList.remove("hidden");
   $("#admin-button").classList.toggle("hidden", !currentMember.is_admin);
+  $("#article-add-button").classList.toggle("hidden", !currentMember.is_admin);
   $("#user-email").textContent = user.email;
   await loadMaterials();
 }
@@ -106,6 +107,12 @@ $("#admin-button").addEventListener("click", async () => {
   $("#admin-modal").classList.remove("hidden");
 });
 
+$("#article-add-button").addEventListener("click", () => {
+  if (!currentMember?.is_admin) return;
+  $("#admin-modal").classList.remove("hidden");
+  $("#article-title-input").focus();
+});
+
 async function renderAllowedList() {
   const { data, error } = await db.from("access_members").select("id,email,is_admin").order("email");
   if (error) {
@@ -164,6 +171,7 @@ db.auth.onAuthStateChange((event, session) => {
     app.classList.add("hidden");
     accessScreen.classList.remove("hidden");
     $("#admin-button").classList.add("hidden");
+    $("#article-add-button").classList.add("hidden");
     $("#email").value = "";
     return;
   }
