@@ -65,7 +65,7 @@ $("#logout-button").addEventListener("click", () => db.auth.signOut());
 
 function renderMaterials() {
   const query = normalize($("#search-input").value);
-  const active = document.querySelector(".category-filters button.active")?.dataset.category || "Все";
+  const active = $("#section-select").value || "Все";
   const filtered = materials.filter((item) => (active === "Все" || item.category === active) && `${item.title} ${item.description} ${item.category}`.toLowerCase().includes(query));
   $("#materials-grid").innerHTML = filtered.map((item, index) => `<article class="material-card" data-id="${item.id}"><div class="card-image card-image--${item.color || "purple"}">${item.image_url ? `<img src="${item.image_url}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">` : ""}<span class="card-number">${String(index + 1).padStart(2, "0")}</span><h3>${item.title}</h3><span class="illustration">${item.icon || "◉"}</span></div><div class="card-body"><span class="card-tag">${item.category}</span><h3>${item.title}</h3><p>${item.description}</p><div class="card-meta"><span>Читать материал</span><span>${item.read_time || ""}</span></div></div></article>`).join("");
   $("#empty-state").classList.toggle("hidden", filtered.length > 0);
@@ -74,12 +74,11 @@ function renderMaterials() {
 
 function setupFilters() {
   const categories = ["Все", ...new Set(materials.map((item) => item.category))];
-  $("#category-filters").innerHTML = categories.map((category) => `<button class="${category === "Все" ? "active" : ""}" data-category="${category}">${category}</button>`).join("");
-  document.querySelectorAll(".category-filters button").forEach((button) => button.addEventListener("click", () => {
-    document.querySelectorAll(".category-filters button").forEach((item) => item.classList.remove("active"));
-    button.classList.add("active");
-    renderMaterials();
-  }));
+  $("#section-select").innerHTML = categories.map((category) => {
+    const label = category === "Основы" ? "Теория тестирования" : category === "Все" ? "Все материалы" : category;
+    return `<option value="${category}">${label}</option>`;
+  }).join("");
+  $("#section-select").addEventListener("change", renderMaterials);
 }
 
 function openArticle(id) {
@@ -96,7 +95,6 @@ function closeModals() {
 
 document.querySelectorAll("[data-close-modal], [data-close-admin]").forEach((element) => element.addEventListener("click", closeModals));
 $("#search-input").addEventListener("input", renderMaterials);
-$("#filter-button").addEventListener("click", () => $("#category-filters").classList.toggle("hidden"));
 
 $("#admin-button").addEventListener("click", async () => {
   if (!currentMember?.is_admin) {
