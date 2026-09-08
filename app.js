@@ -87,7 +87,20 @@ async function loadMaterials() {
 $("#access-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const email = normalize($("#email").value);
+  const { data: sessionData } = await db.auth.getSession();
+  if (sessionData.session?.user) {
+    try {
+      await showApp(sessionData.session.user);
+    } catch (error) {
+      showMessage($("#access-message"), `Ошибка подключения: ${error.message}`);
+    }
+    return;
+  }
   const { error } = await db.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin + window.location.pathname } });
+  if (error?.status === 429 || error?.message?.toLowerCase().includes("rate limit")) {
+    showMessage($("#access-message"), "Активная сессия не найдена. Откройте уже полученную ссылку из письма или повторите попытку позже.");
+    return;
+  }
   showMessage($("#access-message"), error ? `Не удалось отправить письмо: ${error.message}` : "Проверьте почту и перейдите по ссылке из письма.", !error);
 });
 
@@ -138,14 +151,20 @@ $("#theory-link").addEventListener("click", () => {
 async function openArticle(id) {
   const item = materials.find((material) => String(material.id) === String(id));
   if (!item) return;
-  const { data: questions } = await db.from("quiz_questions").select("*").eq("article_id", item.id).order("sort_order");
-  const quiz = (questions || []).length && item.section === "theory" ? `<section class="quiz" id="quiz-${item.id}"><p class="eyebrow">Проверь себя</p><h3>Мини-тест после теории</h3>${questions.map((question, index) => `<fieldset class="quiz-question" data-answer="${question.correct_option}"><legend>${index + 1}. ${escapeHtml(question.question)}</legend>${(question.options || []).map((option, optionIndex) => `<label><input type="radio" name="question-${question.id}" value="${optionIndex}" /> ${escapeHtml(option)}</label>`).join("")}<p class="quiz-result"></p></fieldset><p class="quiz-explanation hidden">${escapeHtml(question.explanation || "")}</p>`).join("")}<button class="button button--secondary quiz-check" type="button">Проверить ответы</button><p class="quiz-score"></p></section>` : "";
   const completed = completedArticles.has(String(item.id));
-  $("#article-content").innerHTML = `<div class="article-visual card-image--${escapeHtml(item.color || "purple")}">${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="" class="article-image">` : `<h2>${escapeHtml(item.title)}</h2>`}</div><p class="eyebrow">${escapeHtml(item.category)} · ${escapeHtml(item.read_time || "")}${item.status === "draft" ? " · черновик" : ""}</p><h2 id="article-title">${escapeHtml(item.title)}</h2><div class="article-copy">${item.content}</div>${quiz}<button id="complete-article-button" class="button ${completed ? "button--secondary" : "button--primary"} article-complete-button" type="button">${completed ? "✓ Материал пройден" : "Отметить как пройденное"}</button>${currentMember?.is_admin ? '<button id="edit-article-button" class="button button--secondary article-edit-button" type="button">Редактировать материал</button>' : ""}`;
+  $("#article-content").innerHTML = `<div class="article-visual card-image--${escapeHtml(item.color || "purple")}">${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="" class="article-image">` : `<h2>${escapeHtml(item.title)}</h2>`}</div><p class="eyebrow">${escapeHtml(item.category)} · ${escapeHtml(item.read_time || "")}${item.status === "draft" ? " · черновик" : ""}</p><h2 id="article-title">${escapeHtml(item.title)}</h2><div class="article-copy">${item.content}</div><div id="quiz-slot"></div><button id="complete-article-button" class="button ${completed ? "button--secondary" : "button--primary"} article-complete-button" type="button">${completed ? "✓ Материал пройден" : "Отметить как пройденное"}</button>${currentMember?.is_admin ? '<button id="edit-article-button" class="button button--secondary article-edit-button" type="button">Редактировать материал</button>' : ""}`;
   $("#article-modal").classList.remove("hidden");
   $("#complete-article-button").addEventListener("click", () => markCompleted(item));
   $("#edit-article-button")?.addEventListener("click", () => openArticleEditor(item));
-  $(".quiz-check")?.addEventListener("click", () => checkQuiz(item));
+  const { data: questions, error } = await db.from("quiz_questions").select("*").eq("article_id", item.id).order("sort_order");
+  if (error) {
+    console.error("Не удалось загрузить тест:", error);
+    return;
+  }
+  if ((questions || []).length && item.section === "theory") {
+    $("#quiz-slot").innerHTML = `<section class="quiz" id="quiz-${item.id}"><p class="eyebrow">Проверь себя</p><h3>Мини-тест после теории</h3>${questions.map((question, index) => `<fieldset class="quiz-question" data-answer="${question.correct_option}"><legend>${index + 1}. ${escapeHtml(question.question)}</legend>${(question.options || []).map((option, optionIndex) => `<label><input type="radio" name="question-${question.id}" value="${optionIndex}" /> ${escapeHtml(option)}</label>`).join("")}<p class="quiz-result"></p></fieldset><p class="quiz-explanation hidden">${escapeHtml(question.explanation || "")}</p>`).join("")}<button class="button button--secondary quiz-check" type="button">Проверить ответы</button><p class="quiz-score"></p></section>`;
+    $(".quiz-check").addEventListener("click", () => checkQuiz(item));
+  }
 }
 
 async function markCompleted(item) {
@@ -382,8 +401,20 @@ $("#article-form").addEventListener("submit", async (event) => {
   renderAdminArticles();
 });
 
+let authUserHandled = null;
+async function handleAuthSession(session) {
+  if (!session?.user || authUserHandled === session.user.id) return;
+  authUserHandled = session.user.id;
+  try {
+    await showApp(session.user);
+  } catch (error) {
+    showMessage($("#access-message"), `Ошибка подключения: ${error.message}`);
+  }
+}
+
 db.auth.onAuthStateChange((event, session) => {
   if (event === "SIGNED_OUT") {
+    authUserHandled = null;
     currentUser = null;
     currentMember = null;
     profile = null;
@@ -394,11 +425,13 @@ db.auth.onAuthStateChange((event, session) => {
     $("#email").value = "";
     return;
   }
-  if (session?.user) setTimeout(async () => {
-    try {
-      await showApp(session.user);
-    } catch (error) {
-      showMessage($("#access-message"), `Ошибка подключения: ${error.message}`);
-    }
-  }, 0);
+  if (session?.user) setTimeout(() => handleAuthSession(session), 0);
+});
+
+db.auth.getSession().then(({ data, error }) => {
+  if (error) {
+    showMessage($("#access-message"), `Ошибка восстановления сессии: ${error.message}`);
+    return;
+  }
+  handleAuthSession(data.session);
 });
