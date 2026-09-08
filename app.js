@@ -504,6 +504,15 @@ $("#invite-form").addEventListener("submit", async (event) => {
 $("#article-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!currentMember?.is_admin) return;
+  const category = $("#article-category-input").value.trim();
+  const title = $("#article-title-input").value.trim();
+  const description = $("#article-description-input").value.trim();
+  const content = $("#article-content-input").innerHTML.trim();
+  const readTime = $("#article-time-input").value.trim();
+  if (!category || !title || !description || !content || !readTime) {
+    showMessage($("#article-message"), "Заполните название, категорию, описание, время чтения и текст материала.");
+    return;
+  }
   let imageUrl = $("#article-image-input").value.trim() || null;
   const file = $("#article-image-file").files[0];
   if (file) {
@@ -517,12 +526,12 @@ $("#article-form").addEventListener("submit", async (event) => {
     imageUrl = db.storage.from("article-images").getPublicUrl(path).data.publicUrl;
   }
   const article = {
-    category: $("#article-category-input").value.trim(),
+    category,
     section: $("#article-section-input").value,
-    title: $("#article-title-input").value.trim(),
-    description: $("#article-description-input").value.trim(),
-    content: $("#article-content-input").innerHTML.trim(),
-    read_time: $("#article-time-input").value.trim(),
+    title,
+    description,
+    content,
+    read_time: readTime,
     sort_order: Number($("#article-order-input").value) || 0,
     status: $("#article-draft-input").checked ? "draft" : "published",
     color: $("#article-color-input").value,
