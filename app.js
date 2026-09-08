@@ -17,6 +17,7 @@ let activeSection = "theory";
 let activeCategory = null;
 let authMode = "password";
 let showCompletedOnly = false;
+let activeArticleId = null;
 
 const normalize = (value = "") => value.trim().toLowerCase();
 const escapeHtml = (value = "") => String(value).replace(/[&<>"']/g, (character) => ({
@@ -171,8 +172,9 @@ function renderMaterials() {
   $("#materials-grid").innerHTML = filtered.map((item, index) => {
     const draft = item.status === "draft";
     const completed = completedArticles.has(String(item.id));
-    return `<article class="material-card ${draft ? "material-card--draft" : ""}" data-id="${item.id}"><div class="card-image card-image--${escapeHtml(item.color || "purple")}">${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="" class="card-image-upload">` : ""}<span class="card-number">${String(index + 1).padStart(2, "0")}</span>${draft ? '<span class="draft-badge">Черновик</span>' : ""}<h3>${escapeHtml(item.title)}</h3><span class="illustration">${escapeHtml(item.icon || "◉")}</span></div><div class="card-body"><span class="card-tag">${escapeHtml(item.category)}${completed ? " · ✓ изучено" : ""}</span><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.description)}</p><div class="card-meta"><span>${completed ? "Материал пройден" : "Читать материал"}</span><span>${escapeHtml(item.read_time || "")}</span></div></div></article>`;
+    return `<button class="material-card ${draft ? "material-card--draft" : ""} ${activeArticleId === String(item.id) ? "material-card--active" : ""}" data-id="${item.id}" type="button"><span class="material-card-index">${String(index + 1).padStart(2, "0")}</span><span class="material-card-copy"><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.category)} · ${escapeHtml(item.read_time || "")}</small></span><span class="material-card-status">${completed ? "✓" : "→"}</span></button>`;
   }).join("");
+  $("#sidebar-count").textContent = filtered.length;
   $("#empty-state").classList.toggle("hidden", filtered.length > 0);
   document.querySelectorAll(".material-card").forEach((card) => card.addEventListener("click", () => openArticle(card.dataset.id)));
 }
@@ -232,15 +234,26 @@ $("#continue-learning").addEventListener("click", () => {
 async function openArticle(id) {
   const item = materials.find((material) => String(material.id) === String(id));
   if (!item) return;
+  activeArticleId = String(item.id);
+  renderMaterials();
   const completed = completedArticles.has(String(item.id));
-  $("#article-content").innerHTML = `<div class="article-visual card-image--${escapeHtml(item.color || "purple")}">${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="" class="article-image">` : `<h2>${escapeHtml(item.title)}</h2>`}</div><p class="eyebrow">${escapeHtml(item.category)} · ${escapeHtml(item.read_time || "")}${item.status === "draft" ? " · черновик" : ""}</p><h2 id="article-title">${escapeHtml(item.title)}</h2><div class="article-copy">${item.content}</div><div id="quiz-slot"></div><button id="complete-article-button" class="button ${completed ? "button--secondary" : "button--primary"} article-complete-button" type="button">${completed ? "✓ Материал пройден" : "Отметить как пройденное"}</button>${currentMember?.is_admin ? '<button id="edit-article-button" class="button button--secondary article-edit-button" type="button">Редактировать материал</button>' : ""}`;
-  $("#article-modal").classList.remove("hidden");
+  $("#reader-empty").classList.add("hidden");
+  $("#article-content").classList.remove("hidden");
+  $("#article-content").innerHTML = `<button class="reader-back" type="button" id="reader-back">← Вернуться к библиотеке</button><div class="article-visual card-image--${escapeHtml(item.color || "purple")}">${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="" class="article-image">` : `<h2>${escapeHtml(item.title)}</h2>`}</div><p class="eyebrow">${escapeHtml(item.category)} · ${escapeHtml(item.read_time || "")}${item.status === "draft" ? " · черновик" : ""}</p><h2 id="article-title">${escapeHtml(item.title)}</h2><div class="article-copy">${item.content}</div><div id="quiz-slot"></div><div class="reader-actions"><button id="complete-article-button" class="button ${completed ? "button--secondary" : "button--primary"} article-complete-button" type="button">${completed ? "✓ Материал пройден" : "Отметить как пройденное"}</button>${currentMember?.is_admin ? '<button id="edit-article-button" class="button button--secondary article-edit-button" type="button">Редактировать материал</button>' : ""}</div>`;
+  $("#reader-back").addEventListener("click", closeArticleReader);
   $("#complete-article-button").addEventListener("click", () => markCompleted(item));
   $("#edit-article-button")?.addEventListener("click", () => openArticleEditor(item));
   const { data: questions, error } = await db.from("quiz_questions").select("*").eq("article_id", item.id).order("sort_order");
   if (error) {
     console.error("Не удалось загрузить тест:", error);
     return;
+  }
+
+  function closeArticleReader() {
+    activeArticleId = null;
+    $("#article-content").classList.add("hidden");
+    $("#reader-empty").classList.remove("hidden");
+    renderMaterials();
   }
   if ((questions || []).length && item.section === "theory") {
     $("#quiz-slot").innerHTML = `<section class="quiz" id="quiz-${item.id}"><p class="eyebrow">Проверь себя</p><h3>Мини-тест после теории</h3>${questions.map((question, index) => `<fieldset class="quiz-question" data-answer="${question.correct_option}"><legend>${index + 1}. ${escapeHtml(question.question)}</legend>${(question.options || []).map((option, optionIndex) => `<label><input type="radio" name="question-${question.id}" value="${optionIndex}" /> ${escapeHtml(option)}</label>`).join("")}<p class="quiz-result"></p></fieldset><p class="quiz-explanation hidden">${escapeHtml(question.explanation || "")}</p>`).join("")}<button class="button button--secondary quiz-check" type="button">Проверить ответы</button><p class="quiz-score"></p></section>`;
