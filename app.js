@@ -7,6 +7,8 @@ const app = $("#app");
 let materials = [];
 let currentMember = null;
 let editingArticleId = null;
+let activeSection = "theory";
+let activeCategory = null;
 
 const normalize = (value) => value.trim().toLowerCase();
 const showMessage = (element, text, success = false) => {
@@ -42,7 +44,7 @@ async function loadMaterials() {
     return;
   }
   materials = data || [];
-  setupFilters();
+  setupNavigation();
   renderMaterials();
 }
 
@@ -66,21 +68,36 @@ $("#logout-button").addEventListener("click", () => db.auth.signOut());
 
 function renderMaterials() {
   const query = normalize($("#search-input").value);
-  const active = $("#section-select").value || "Все";
-  const filtered = materials.filter((item) => (active === "Все" || item.category === active) && `${item.title} ${item.description} ${item.category}`.toLowerCase().includes(query));
+  const filtered = materials.filter((item) => {
+    const itemSection = item.section || "theory";
+    return itemSection === activeSection
+      && (!activeCategory || item.category === activeCategory)
+      && `${item.title} ${item.description} ${item.category}`.toLowerCase().includes(query);
+  });
   $("#materials-grid").innerHTML = filtered.map((item, index) => `<article class="material-card" data-id="${item.id}"><div class="card-image card-image--${item.color || "purple"}">${item.image_url ? `<img src="${item.image_url}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">` : ""}<span class="card-number">${String(index + 1).padStart(2, "0")}</span><h3>${item.title}</h3><span class="illustration">${item.icon || "◉"}</span></div><div class="card-body"><span class="card-tag">${item.category}</span><h3>${item.title}</h3><p>${item.description}</p><div class="card-meta"><span>Читать материал</span><span>${item.read_time || ""}</span></div></div></article>`).join("");
   $("#empty-state").classList.toggle("hidden", filtered.length > 0);
   document.querySelectorAll(".material-card").forEach((card) => card.addEventListener("click", () => openArticle(card.dataset.id)));
 }
 
-function setupFilters() {
-  const categories = ["Все", ...new Set(materials.map((item) => item.category))];
-  $("#section-select").innerHTML = categories.map((category) => {
-    const label = category === "Основы" ? "Теория тестирования" : category === "Все" ? "Все материалы" : category;
-    return `<option value="${category}">${label}</option>`;
-  }).join("");
-  $("#section-select").addEventListener("change", renderMaterials);
+function setupNavigation() {
+  const practiceCategories = [...new Set(materials.filter((item) => item.section === "practice").map((item) => item.category))];
+  $("#practice-menu").innerHTML = [
+    `<button type="button" data-section="practice" data-category="">Все практические задания</button>`,
+    ...practiceCategories.map((category) => `<button type="button" data-section="practice" data-category="${category}">${category}</button>`),
+  ].join("");
+  document.querySelectorAll("#practice-menu button").forEach((button) => button.addEventListener("click", () => {
+    activeSection = button.dataset.section;
+    activeCategory = button.dataset.category || null;
+    renderMaterials();
+    $("#library").scrollIntoView({ behavior: "smooth" });
+  }));
 }
+
+$("#theory-link").addEventListener("click", () => {
+  activeSection = "theory";
+  activeCategory = null;
+  renderMaterials();
+});
 
 function openArticle(id) {
   const item = materials.find((material) => String(material.id) === String(id));
@@ -134,6 +151,7 @@ function openArticleEditor(item) {
   editingArticleId = item.id;
   $("#article-title-input").value = item.title;
   $("#article-category-input").value = item.category;
+  $("#article-section-input").value = item.section || "theory";
   $("#article-time-input").value = item.read_time || "";
   $("#article-description-input").value = item.description;
   $("#article-content-input").value = item.content;
@@ -184,6 +202,7 @@ $("#article-form").addEventListener("submit", async (event) => {
   }
   const article = {
     category: $("#article-category-input").value.trim(),
+    section: $("#article-section-input").value,
     title: $("#article-title-input").value.trim(),
     description: $("#article-description-input").value.trim(),
     content: $("#article-content-input").value.trim(),
