@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="QA Base — закрытая база теоретических материалов для тестировщиков." />
+    <title>QA Base — база знаний</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="access-screen" class="access-screen">
+      <div class="access-glow access-glow--one"></div>
+      <div class="access-glow access-glow--two"></div>
+      <main class="access-card">
+        <div class="brand brand--center"><span class="brand-mark">✓</span><span>QA<span class="brand-accent">Base</span></span></div>
+        <p class="eyebrow">Закрытая база знаний</p>
+        <h1>Расти как QA,<br /><em>системно.</em></h1>
+        <p class="access-description">Теория, практические заметки и полезные материалы в одном месте.</p>
+        <form id="access-form" class="access-form">
+          <label for="email">Ваш email</label>
+          <div class="input-with-action">
+            <input id="email" type="email" placeholder="you@example.com" autocomplete="email" required />
+            <button class="button button--primary" type="submit">Войти <span>→</span></button>
+          </div>
+          <p id="access-message" class="form-message" role="status"></p>
+        </form>
+        <button id="request-access" class="text-button" type="button">Запросить доступ <span>↗</span></button>
+        <p class="access-note">Доступ выдаётся персонально. Если вы уже получили приглашение, используйте тот же email.</p>
+      </main>
+      <p class="access-footer">QA Base · закрытый учебный проект</p>
+    </div>
+
+    <div id="app" class="app hidden">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="QA Base — на главную"><span class="brand-mark">✓</span><span>QA<span class="brand-accent">Base</span></span></a>
+        <nav class="topnav" aria-label="Основная навигация">
+          <a class="topnav-link topnav-link--active" href="#materials">Материалы</a>
+          <a class="topnav-link" href="#about">О базе</a>
+        </nav>
+        <div class="user-menu">
+          <button id="admin-button" class="icon-button" type="button" title="Управление доступом" aria-label="Управление доступом">⚙</button>
+          <span id="user-email" class="user-email"></span>
+          <button id="logout-button" class="logout-button" type="button">Выйти</button>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero" id="materials">
+          <div class="hero-copy">
+            <p class="eyebrow">Привет, тестировщик <span class="wave">✦</span></p>
+            <h1>Проверяй гипотезы.<br /><span>Находи ответы.</span></h1>
+            <p class="hero-description">Структурированная база знаний, которая помогает превратить теорию тестирования в уверенную практику.</p>
+            <a href="#library" class="button button--dark">Изучить материалы <span>↓</span></a>
+          </div>
+          <div class="hero-art" aria-hidden="true">
+            <div class="orbit orbit--one"></div><div class="orbit orbit--two"></div>
+            <div class="art-card art-card--main"><span class="art-check">✓</span><strong>Quality<br />is a habit</strong><small>not an act</small></div>
+            <div class="art-card art-card--float"><span>BUG</span><b>#404</b></div>
+            <span class="art-star">✦</span><span class="art-dot"></span>
+          </div>
+        </section>
+
+        <section class="library-section" id="library">
+          <div class="section-heading">
+            <div><p class="eyebrow">Библиотека</p><h2>Материалы для роста</h2></div>
+            <div class="library-tools"><label class="search"><span>⌕</span><input id="search-input" type="search" placeholder="Найти материал..." /></label><button id="filter-button" class="filter-button" type="button">Фильтр <span>≡</span></button></div>
+          </div>
+          <div id="category-filters" class="category-filters hidden"></div>
+          <div id="materials-grid" class="materials-grid"></div>
+          <p id="empty-state" class="empty-state hidden">По вашему запросу ничего не найдено.</p>
+        </section>
+
+        <section class="about-section" id="about">
+          <div><p class="eyebrow">Как это работает</p><h2>Учись в своём ритме.</h2></div>
+          <div class="about-points"><div><span>01</span><p><strong>Выбери тему</strong><br />Начни с основ или углубись в знакомый раздел.</p></div><div><span>02</span><p><strong>Разберись в сути</strong><br />Короткие материалы без лишнего шума.</p></div><div><span>03</span><p><strong>Примени на практике</strong><br />Проверяй знания на реальных кейсах.</p></div></div>
+        </section>
+      </main>
+      <footer class="footer"><span>QA<span class="brand-accent">Base</span> · 2026</span><span>Сделано для тех, кто задаёт вопросы</span></footer>
+    </div>
+
+    <div id="article-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="article-title">
+      <div class="modal-backdrop" data-close-modal></div><article class="modal-card"><button class="modal-close" type="button" data-close-modal aria-label="Закрыть">×</button><div id="article-content"></div></article>
+    </div>
+    <div id="admin-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="admin-title">
+      <div class="modal-backdrop" data-close-admin></div><article class="modal-card admin-card"><button class="modal-close" type="button" data-close-admin aria-label="Закрыть">×</button><p class="eyebrow">Настройки доступа</p><h2 id="admin-title">Участники</h2><p class="modal-lead">Добавленные адреса сохраняются в этом браузере.</p><form id="invite-form" class="invite-form"><input id="invite-email" type="email" placeholder="email участника" required /><button class="button button--primary" type="submit">Добавить</button></form><p id="invite-message" class="form-message" role="status"></p><ul id="allowed-list" class="allowed-list"></ul><p class="admin-warning">Важно: это статический сайт. Список доступа нельзя надёжно скрыть от посетителя, поэтому для настоящей приватности нужен сервер.</p></article>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
