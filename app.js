@@ -103,16 +103,22 @@ $("#admin-button").addEventListener("click", async () => {
     window.alert("Панель доступна только владельцу базы.");
     return;
   }
-  await renderAllowedList();
-  $("#admin-modal").classList.remove("hidden");
+  await openAdminModal("members");
 });
 
 $("#article-add-button").addEventListener("click", () => {
   if (!currentMember?.is_admin) return;
   resetArticleForm();
-  $("#admin-modal").classList.remove("hidden");
+  openAdminModal("article");
   $("#article-title-input").focus();
 });
+
+async function openAdminModal(mode) {
+  $("#article-admin-section").classList.toggle("hidden", mode !== "article");
+  $("#members-admin-section").classList.toggle("hidden", mode !== "members");
+  if (mode === "members") await renderAllowedList();
+  $("#admin-modal").classList.remove("hidden");
+}
 
 function resetArticleForm() {
   editingArticleId = null;
@@ -137,7 +143,7 @@ function openArticleEditor(item) {
   $("#article-submit").textContent = "Сохранить изменения";
   $("#article-cancel-edit").classList.remove("hidden");
   $("#article-modal").classList.add("hidden");
-  $("#admin-modal").classList.remove("hidden");
+  openAdminModal("article");
   $("#article-title-input").focus();
 }
 
