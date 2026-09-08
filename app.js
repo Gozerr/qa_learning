@@ -6,6 +6,7 @@ const accessScreen = $("#access-screen");
 const app = $("#app");
 let materials = [];
 let currentMember = null;
+let editingArticleId = null;
 
 const normalize = (value) => value.trim().toLowerCase();
 const showMessage = (element, text, success = false) => {
@@ -84,8 +85,9 @@ function setupFilters() {
 function openArticle(id) {
   const item = materials.find((material) => String(material.id) === String(id));
   if (!item) return;
-  $("#article-content").innerHTML = `<div class="article-visual card-image--${item.color || "purple"}">${item.image_url ? `<img src="${item.image_url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:13px">` : `<h2>${item.title}</h2>`}</div><p class="eyebrow">${item.category} · ${item.read_time || ""}</p><h2 id="article-title">${item.title}</h2><div class="article-copy">${item.content}</div>`;
+  $("#article-content").innerHTML = `<div class="article-visual card-image--${item.color || "purple"}">${item.image_url ? `<img src="${item.image_url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:13px">` : `<h2>${item.title}</h2>`}</div><p class="eyebrow">${item.category} · ${item.read_time || ""}</p><h2 id="article-title">${item.title}</h2><div class="article-copy">${item.content}</div>${currentMember?.is_admin ? '<button id="edit-article-button" class="button button--primary article-edit-button" type="button">Редактировать материал</button>' : ""}`;
   $("#article-modal").classList.remove("hidden");
+  $("#edit-article-button")?.addEventListener("click", () => openArticleEditor(item));
 }
 
 function closeModals() {
@@ -107,9 +109,39 @@ $("#admin-button").addEventListener("click", async () => {
 
 $("#article-add-button").addEventListener("click", () => {
   if (!currentMember?.is_admin) return;
+  resetArticleForm();
   $("#admin-modal").classList.remove("hidden");
   $("#article-title-input").focus();
 });
+
+function resetArticleForm() {
+  editingArticleId = null;
+  $("#article-form").reset();
+  $("#article-form-heading").textContent = "Новый материал";
+  $("#article-submit").textContent = "Опубликовать материал";
+  $("#article-cancel-edit").classList.add("hidden");
+  showMessage($("#article-message"), "");
+}
+
+function openArticleEditor(item) {
+  if (!currentMember?.is_admin) return;
+  editingArticleId = item.id;
+  $("#article-title-input").value = item.title;
+  $("#article-category-input").value = item.category;
+  $("#article-time-input").value = item.read_time || "";
+  $("#article-description-input").value = item.description;
+  $("#article-content-input").value = item.content;
+  $("#article-color-input").value = item.color || "purple";
+  $("#article-image-input").value = item.image_url || "";
+  $("#article-form-heading").textContent = "Редактирование материала";
+  $("#article-submit").textContent = "Сохранить изменения";
+  $("#article-cancel-edit").classList.remove("hidden");
+  $("#article-modal").classList.add("hidden");
+  $("#admin-modal").classList.remove("hidden");
+  $("#article-title-input").focus();
+}
+
+$("#article-cancel-edit").addEventListener("click", resetArticleForm);
 
 async function renderAllowedList() {
   const { data, error } = await db.from("access_members").select("id,email,is_admin").order("email");
@@ -154,13 +186,17 @@ $("#article-form").addEventListener("submit", async (event) => {
     icon: "✦",
     image_url: $("#article-image-input").value.trim() || null,
   };
-  const { error } = await db.from("articles").insert(article);
+  const query = editingArticleId
+    ? db.from("articles").update(article).eq("id", editingArticleId)
+    : db.from("articles").insert(article);
+  const { error } = await query;
   if (error) {
     showMessage($("#article-message"), `Не удалось опубликовать: ${error.message}`);
     return;
   }
-  $("#article-form").reset();
-  showMessage($("#article-message"), "Материал опубликован.", true);
+  const wasEditing = Boolean(editingArticleId);
+  resetArticleForm();
+  showMessage($("#article-message"), wasEditing ? "Изменения сохранены." : "Материал опубликован.", true);
   await loadMaterials();
 });
 
