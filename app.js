@@ -28,6 +28,7 @@ async function showApp(user) {
   }
   accessScreen.classList.add("hidden");
   app.classList.remove("hidden");
+  $("#admin-button").classList.toggle("hidden", !currentMember.is_admin);
   $("#user-email").textContent = user.email;
   await loadMaterials();
 }
@@ -136,6 +137,7 @@ db.auth.onAuthStateChange((event, session) => {
   if (event === "SIGNED_OUT") {
     app.classList.add("hidden");
     accessScreen.classList.remove("hidden");
+    $("#admin-button").classList.add("hidden");
     $("#email").value = "";
     return;
   }
