@@ -133,6 +133,32 @@ $("#invite-form").addEventListener("submit", async (event) => {
   await renderAllowedList();
 });
 
+$("#article-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!currentMember?.is_admin) {
+    showMessage($("#article-message"), "Только владелец может публиковать материалы.");
+    return;
+  }
+  const article = {
+    category: $("#article-category-input").value.trim(),
+    title: $("#article-title-input").value.trim(),
+    description: $("#article-description-input").value.trim(),
+    content: $("#article-content-input").value.trim(),
+    read_time: $("#article-time-input").value.trim(),
+    color: $("#article-color-input").value,
+    icon: "✦",
+    image_url: $("#article-image-input").value.trim() || null,
+  };
+  const { error } = await db.from("articles").insert(article);
+  if (error) {
+    showMessage($("#article-message"), `Не удалось опубликовать: ${error.message}`);
+    return;
+  }
+  $("#article-form").reset();
+  showMessage($("#article-message"), "Материал опубликован.", true);
+  await loadMaterials();
+});
+
 db.auth.onAuthStateChange((event, session) => {
   if (event === "SIGNED_OUT") {
     app.classList.add("hidden");

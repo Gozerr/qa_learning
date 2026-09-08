@@ -58,3 +58,7 @@ using (public.is_admin()) with check (public.is_admin());
 drop policy if exists "members read articles" on public.articles;
 create policy "members read articles" on public.articles for select to authenticated
 using (public.has_access());
+
+drop policy if exists "admins manage articles" on public.articles;
+create policy "admins manage articles" on public.articles for all to authenticated
+using (public.is_admin()) with check (public.is_admin());
