@@ -294,6 +294,7 @@ values ('article-images', 'article-images', false), ('avatars', 'avatars', false
 on conflict (id) do update set public = excluded.public;
 
 drop policy if exists "public can view QA Base images" on storage.objects;
+drop policy if exists "members can view private images" on storage.objects;
 create policy "members can view private images" on storage.objects for select to authenticated
 using (bucket_id in ('article-images', 'avatars') and (public.is_admin() or public.has_access()));
 drop policy if exists "admins upload article images" on storage.objects;
