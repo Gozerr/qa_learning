@@ -70,7 +70,9 @@ function renderReader() {
   if (!article) { $("#reader").innerHTML = '<div class="empty-reader"><h2>Выбери тему</h2><p>Открой материал из списка слева.</p></div>'; return; }
   const done = state.completed.has(String(article.id));
   const safeContent = window.DOMPurify.sanitize(article.content, { USE_PROFILES: { html: true } });
-  $("#reader").innerHTML = `<div class="reader-meta"><span>${article.course === "manual" ? "Manual QA" : "Automation QA — Python"}</span><span>${done ? "Пройдено ✓" : article.read_time || "Учебный материал"}</span></div><h2>${escapeHtml(article.title)}</h2><p class="reader-lead">${escapeHtml(article.description)}</p><div class="article-body">${safeContent}</div><div class="reader-actions"><button id="complete-button" class="${done ? "done" : ""}" type="button">${done ? "Отметить непройденной" : "Отметить пройденной"}</button></div>`;
+  const adminActions = state.member?.is_admin ? '<button id="inline-edit-article" class="inline-edit-button" type="button" title="Редактировать статью">✎</button>' : "";
+  $("#reader").innerHTML = `<div class="reader-meta"><span>${article.course === "manual" ? "Manual QA" : "Automation QA — Python"}</span><span>${done ? "Пройдено ✓" : article.read_time || "Учебный материал"}</span></div><div class="reader-title-row"><h2>${escapeHtml(article.title)}</h2>${adminActions}</div><p class="reader-lead">${escapeHtml(article.description)}</p><div class="article-body">${safeContent}</div><div class="reader-actions"><button id="complete-button" class="${done ? "done" : ""}" type="button">${done ? "Отметить непройденной" : "Отметить пройденной"}</button></div>`;
+  if (state.member?.is_admin) $("#inline-edit-article").addEventListener("click", () => renderInlineArticleEditor(article));
   $("#complete-button").addEventListener("click", async () => {
     const nextDone = !done;
     const result = nextDone ? await db.from("article_progress").upsert({ user_id: state.user.id, article_id: article.id }) : await db.from("article_progress").delete().eq("user_id", state.user.id).eq("article_id", article.id);
@@ -78,6 +80,29 @@ function renderReader() {
     if (nextDone) state.completed.add(String(article.id)); else state.completed.delete(String(article.id));
     renderCourse(); renderProgress();
   });
+}
+
+function renderInlineArticleEditor(article) {
+  const editor = $("#reader");
+  editor.innerHTML = `<div class="inline-editor"><div class="inline-editor-header"><strong>Редактирование статьи</strong><div><button id="inline-save-article" class="primary-button" type="button">Сохранить</button><button id="inline-cancel-article" class="secondary-button" type="button">Отмена</button></div></div><label>Название<input id="inline-title" value="${escapeHtml(article.title)}" /></label><label>Краткое описание<input id="inline-description" value="${escapeHtml(article.description)}" /></label><div class="inline-toolbar"><button type="button" data-inline-command="bold"><strong>B</strong></button><button type="button" data-inline-command="italic"><em>I</em></button><button type="button" data-inline-command="insertUnorderedList">• Список</button><button type="button" data-inline-command="formatBlock" data-inline-value="h3">H3</button><button type="button" data-inline-action="link">Ссылка</button></div><div id="inline-content" class="inline-content-editor" contenteditable="true">${safeInlineContent(article.content)}</div></div>`;
+  document.querySelectorAll("[data-inline-command]").forEach((button) => button.addEventListener("click", () => { $("#inline-content").focus(); const command = button.dataset.inlineCommand; document.execCommand(command, false, command === "formatBlock" ? `<${button.dataset.inlineValue}>` : undefined); }));
+  document.querySelector("[data-inline-action='link']").addEventListener("click", () => { const url = window.prompt("URL ссылки"); if (url) { $("#inline-content").focus(); document.execCommand("createLink", false, url.trim()); } });
+  $("#inline-cancel-article").addEventListener("click", renderCourse);
+  $("#inline-save-article").addEventListener("click", () => saveInlineArticle(article));
+}
+
+function safeInlineContent(content) {
+  return window.DOMPurify.sanitize(content || "", { USE_PROFILES: { html: true } }).replace(/<script[\s\S]*?<\/script>/gi, "");
+}
+
+async function saveInlineArticle(article) {
+  const content = window.DOMPurify.sanitize($("#inline-content").innerHTML, { USE_PROFILES: { html: true } });
+  const payload = { title: $("#inline-title").value.trim(), description: $("#inline-description").value.trim(), content };
+  const { error } = await db.from("articles").update(payload).eq("id", article.id);
+  if (error) { message("#search-caption", error.message); return; }
+  article.title = payload.title; article.description = payload.description; article.content = payload.content;
+  await writeAudit("inline_update", article.id);
+  renderCourse();
 }
 
 function renderProgress() {
@@ -92,9 +117,23 @@ async function loadResources() {
   renderResources();
 }
 function renderResources() {
-  const card = (item) => `<a class="resource-card" href="${escapeHtml(item.url)}" target="_blank" rel="noreferrer"><span>${escapeHtml(item.category || (item.resource_type === "practice" ? "ПРАКТИКА" : "ИНСТРУМЕНТ"))}</span><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.description)}</p><b>Открыть ↗</b></a>`;
+  const card = (item) => `<div class="resource-card-wrap"><a class="resource-card" href="${escapeHtml(item.url)}" target="_blank" rel="noreferrer"><span>${escapeHtml(item.category || (item.resource_type === "practice" ? "ПРАКТИКА" : "ИНСТРУМЕНТ"))}</span><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.description)}</p><b>Открыть ↗</b></a>${state.member?.is_admin ? `<div class="resource-admin-actions"><button type="button" data-resource-inline-edit="${item.id}" title="Редактировать">✎</button><button type="button" data-resource-inline-delete="${item.id}" title="Удалить">×</button></div>` : ""}</div>`;
   $("#practice-grid").innerHTML = state.resources.filter((item) => item.resource_type === "practice").map(card).join("");
   $("#tools-grid").innerHTML = state.resources.filter((item) => item.resource_type === "tool").map(card).join("");
+  bindResourceActions();
+}
+
+function bindResourceActions() {
+  document.querySelectorAll("[data-resource-inline-edit]").forEach((button) => button.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); const item = state.resources.find((resource) => String(resource.id) === button.dataset.resourceInlineEdit); if (item) renderInlineResourceEditor(item); }));
+  document.querySelectorAll("[data-resource-inline-delete]").forEach((button) => button.addEventListener("click", async (event) => { event.preventDefault(); event.stopPropagation(); if (!window.confirm("Удалить этот блок?")) return; const { error } = await db.from("resources").delete().eq("id", button.dataset.resourceInlineDelete); if (error) { message("#search-caption", error.message); return; } await loadResources(); }));
+}
+
+function renderInlineResourceEditor(item) {
+  const wrapper = document.querySelector(`[data-resource-inline-edit="${item.id}"]`).closest(".resource-card-wrap");
+  wrapper.innerHTML = `<form class="inline-resource-editor"><div class="form-grid"><label>Тип<select name="resource_type"><option value="practice">Практика</option><option value="tool">Инструмент</option></select></label><label>Категория<input name="category" value="${escapeHtml(item.category)}" /></label></div><label>Название<input name="title" value="${escapeHtml(item.title)}" required /></label><label>Описание<input name="description" value="${escapeHtml(item.description)}" required /></label><label>Ссылка<input name="url" type="url" value="${escapeHtml(item.url)}" required /></label><div class="admin-form-actions"><button class="primary-button" type="submit">Сохранить</button><button class="secondary-button" type="button" data-resource-inline-cancel>Отмена</button></div></form>`;
+  wrapper.querySelector("[name='resource_type']").value = item.resource_type;
+  wrapper.querySelector("form").addEventListener("submit", async (event) => { event.preventDefault(); const form = new FormData(event.target); const { error } = await db.from("resources").update({ resource_type: form.get("resource_type"), category: form.get("category").trim(), title: form.get("title").trim(), description: form.get("description").trim(), url: form.get("url").trim() }).eq("id", item.id); if (error) { message("#search-caption", error.message); return; } await loadResources(); });
+  wrapper.querySelector("[data-resource-inline-cancel]").addEventListener("click", renderResources);
 }
 
 async function submitAuth(event) {
