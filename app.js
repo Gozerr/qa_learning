@@ -2,7 +2,7 @@ const SUPABASE_URL = "https://hberfcawhmudegydhtnb.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_W99wvJK_aI_NOhLx9-y8TQ_tx9FQct_";
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { detectSessionInUrl: true } });
 const $ = (selector) => document.querySelector(selector);
-const state = { user: null, member: null, articles: [], adminArticles: [], course: "manual", selectedId: null, completed: new Set(), authMode: "password" };
+const state = { user: null, member: null, articles: [], adminArticles: [], resources: [], course: "manual", selectedId: null, completed: new Set(), authMode: "password" };
 let articleEditor;
 const escapeHtml = (value = "") => String(value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[character]));
 const slugify = (value) => value.toLowerCase().trim().replace(/[^a-zа-яё0-9]+/gi, "-").replace(/^-+|-+$/g, "").replace(/-+/g, "-");
@@ -32,7 +32,7 @@ async function enterApp(session) {
   $("#admin-open").classList.toggle("hidden", !member.is_admin);
   $("#admin-open").textContent = member.is_admin ? "CMS · Admin" : "CMS";
   $("#current-user").textContent = `${member.is_admin ? "Администратор" : "Участник"} · ${session.user.email}`;
-  await Promise.all([loadArticles(), loadProgress()]);
+  await Promise.all([loadArticles(), loadProgress(), loadResources()]);
 }
 
 async function loadProgress() {
@@ -85,11 +85,16 @@ function renderProgress() {
   $("#completed-count").textContent = done; $("#progress-percent").textContent = `${percent}%`;
 }
 
+async function loadResources() {
+  const { data, error } = await db.from("resources").select("*").eq("status", "published").order("resource_type").order("sort_order");
+  if (error) throw error;
+  state.resources = data || [];
+  renderResources();
+}
 function renderResources() {
-  const practice = [{ title: "Bug report", text: "Описывай дефекты с шагами, expected/actual и evidence.", url: "https://www.guru99.com/software-testing.html" }, { title: "API checks", text: "Тренируй status code, schema, негативные сценарии и авторизацию.", url: "https://www.postman.com/" }, { title: "SQL tasks", text: "Проверяй данные после действий пользователя запросами SELECT и JOIN.", url: "https://www.sql-practice.com/" }];
-  const tools = [{ title: "Chrome DevTools", category: "Browser", text: "DOM, Console, Network и Application.", url: "https://developer.chrome.com/docs/devtools/" }, { title: "Postman", category: "API", text: "Коллекции, environments и API assertions.", url: "https://www.postman.com/" }, { title: "Playwright", category: "Python automation", text: "Локаторы, auto-waiting, tracing и assertions.", url: "https://playwright.dev/python/" }, { title: "Python", category: "Language", text: "Официальная документация языка и стандартной библиотеки.", url: "https://docs.python.org/3/" }];
-  $("#practice-grid").innerHTML = practice.map((item) => `<a class="resource-card" href="${item.url}" target="_blank" rel="noreferrer"><span>ПРАКТИКА</span><h3>${item.title}</h3><p>${item.text}</p><b>Открыть ↗</b></a>`).join("");
-  $("#tools-grid").innerHTML = tools.map((item) => `<a class="resource-card" href="${item.url}" target="_blank" rel="noreferrer"><span>${item.category}</span><h3>${item.title}</h3><p>${item.text}</p><b>Документация ↗</b></a>`).join("");
+  const card = (item) => `<a class="resource-card" href="${escapeHtml(item.url)}" target="_blank" rel="noreferrer"><span>${escapeHtml(item.category || (item.resource_type === "practice" ? "ПРАКТИКА" : "ИНСТРУМЕНТ"))}</span><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.description)}</p><b>Открыть ↗</b></a>`;
+  $("#practice-grid").innerHTML = state.resources.filter((item) => item.resource_type === "practice").map(card).join("");
+  $("#tools-grid").innerHTML = state.resources.filter((item) => item.resource_type === "tool").map(card).join("");
 }
 
 async function submitAuth(event) {
@@ -110,8 +115,14 @@ document.querySelectorAll(".course-tab").forEach((button) => button.addEventList
 $("#article-list").addEventListener("click", (event) => { const button = event.target.closest("[data-id]"); if (button) { state.selectedId = button.dataset.id; renderCourse(); } });
 $("#search-input").addEventListener("input", renderCourse);
 
-function openAdmin() { $("#admin-modal").classList.remove("hidden"); renderAdminList(); }
+function openAdmin() { $("#admin-modal").classList.remove("hidden"); renderAdminList(); renderResourceAdminList(); }
 async function renderAdminList() { const { data, error } = await db.from("articles").select("*").order("course").order("sort_order"); if (error) { message("#admin-message", error.message); return; } state.adminArticles = data || []; $("#admin-list").innerHTML = state.adminArticles.map((article) => `<div class="admin-row"><span><strong>${escapeHtml(article.title)}</strong><small>${article.course} · ${article.status} · ${article.level || "beginner"}</small></span><button data-edit="${article.id}" type="button">Изменить</button><button data-duplicate="${article.id}" type="button">Дубль</button><button class="danger-button" data-delete="${article.id}" type="button">Удалить</button></div>`).join(""); }
+async function renderResourceAdminList() {
+  const { data, error } = await db.from("resources").select("*").order("resource_type").order("sort_order");
+  if (error) { message("#admin-message", error.message); return; }
+  const resources = data || [];
+  $("#resource-admin-list").innerHTML = resources.map((item) => `<div class="admin-row"><span><strong>${escapeHtml(item.title)}</strong><small>${item.resource_type === "practice" ? "Практика" : "Инструмент"} · ${escapeHtml(item.url)}</small></span><button data-resource-edit="${item.id}" type="button">Изменить</button><button class="danger-button" data-resource-delete="${item.id}" type="button">Удалить</button></div>`).join("");
+}
 $("#admin-open").addEventListener("click", openAdmin);
 document.querySelectorAll("[data-close-admin]").forEach((element) => element.addEventListener("click", () => $("#admin-modal").classList.add("hidden")));
 function syncEditor() { if (!articleEditor) return; $("#edit-content").value = window.DOMPurify.sanitize(articleEditor.root.innerHTML, { USE_PROFILES: { html: true } }); }
@@ -131,6 +142,9 @@ $("#preview-article").addEventListener("click", () => { const payload = editorPa
 let autosaveTimer;
 $("#article-form").addEventListener("input", () => { clearTimeout(autosaveTimer); autosaveTimer = setTimeout(() => { localStorage.setItem("qa-guide-article-draft", JSON.stringify({ ...editorPayload(), id: $("#edit-id").value })); message("#admin-message", "Черновик сохранён локально.", true); }, 900); });
 $("#admin-list").addEventListener("click", async (event) => { const edit = event.target.closest("[data-edit]"); const duplicate = event.target.closest("[data-duplicate]"); const remove = event.target.closest("[data-delete]"); const article = state.adminArticles.find((item) => String(item.id) === (edit?.dataset.edit || duplicate?.dataset.duplicate)); if (article) { $("#edit-id").value = duplicate ? "" : article.id; $("#edit-course").value = article.course; $("#edit-module").value = article.module || "Основы"; $("#edit-level").value = article.level || "beginner"; $("#edit-minutes").value = article.estimated_minutes || 10; $("#edit-title").value = duplicate ? `${article.title} — копия` : article.title; $("#edit-description").value = article.description; $("#edit-tags").value = article.tags || ""; setEditorContent(article.content); $("#edit-status").value = duplicate ? "draft" : article.status; $("#edit-order").value = article.sort_order; $("#duplicate-article").classList.toggle("hidden", !edit); } if (remove && window.confirm("Удалить статью безвозвратно? Связанный прогресс также будет удалён.")) { const { error } = await db.from("articles").delete().eq("id", remove.dataset.delete); if (error) { message("#admin-message", error.message); return; } await writeAudit("delete", remove.dataset.delete); message("#admin-message", "Статья удалена.", true); await renderAdminList(); await loadArticles(); } });
+$("#resource-form").addEventListener("submit", async (event) => { event.preventDefault(); const id = $("#resource-id").value; const payload = { resource_type: $("#resource-type").value, category: $("#resource-category").value.trim(), title: $("#resource-title").value.trim(), description: $("#resource-description").value.trim(), url: $("#resource-url").value.trim(), sort_order: Number($("#resource-order").value || 0), status: "published", created_by: state.user.id }; const result = id ? await db.from("resources").update(payload).eq("id", id) : await db.from("resources").insert(payload); if (result.error) { message("#admin-message", result.error.message); return; } message("#admin-message", "Блок ресурса сохранён.", true); event.target.reset(); $("#resource-id").value = ""; await renderResourceAdminList(); await loadResources(); });
+$("#resource-reset").addEventListener("click", () => { $("#resource-form").reset(); $("#resource-id").value = ""; });
+$("#resource-admin-list").addEventListener("click", async (event) => { const edit = event.target.closest("[data-resource-edit]"); const remove = event.target.closest("[data-resource-delete]"); if (edit) { const { data, error } = await db.from("resources").select("*").eq("id", edit.dataset.resourceEdit).single(); if (error) { message("#admin-message", error.message); return; } $("#resource-id").value = data.id; $("#resource-type").value = data.resource_type; $("#resource-category").value = data.category; $("#resource-title").value = data.title; $("#resource-description").value = data.description; $("#resource-url").value = data.url; $("#resource-order").value = data.sort_order; } if (remove && window.confirm("Удалить этот блок ресурса?")) { const { error } = await db.from("resources").delete().eq("id", remove.dataset.resourceDelete); if (error) { message("#admin-message", error.message); return; } await renderResourceAdminList(); await loadResources(); } });
 
 db.auth.getSession().then(({ data }) => data.session && enterApp(data.session).catch((error) => message("#auth-message", error.message)));
 db.auth.onAuthStateChange((_event, session) => { if (session && !state.user) enterApp(session).catch((error) => message("#auth-message", error.message)); if (!session) { state.user = null; $("#auth-screen").classList.remove("hidden"); $("#app").classList.add("hidden"); } });
