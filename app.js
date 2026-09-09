@@ -2,7 +2,7 @@ const SUPABASE_URL = "https://hberfcawhmudegydhtnb.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_W99wvJK_aI_NOhLx9-y8TQ_tx9FQct_";
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { detectSessionInUrl: true } });
 const $ = (selector) => document.querySelector(selector);
-const state = { user: null, member: null, articles: [], course: "manual", selectedId: null, completed: new Set(), authMode: "password" };
+const state = { user: null, member: null, articles: [], adminArticles: [], course: "manual", selectedId: null, completed: new Set(), authMode: "password" };
 const escapeHtml = (value = "") => String(value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[character]));
 const message = (selector, text, success = false) => { const element = $(selector); element.textContent = text; element.classList.toggle("success", success); };
 
@@ -42,7 +42,7 @@ async function loadArticles() {
   state.articles = data || [];
   $("#article-count").textContent = state.articles.length;
   const first = state.articles.find((article) => article.course === state.course);
-  state.selectedId = state.selectedId || first?.id;
+  state.selectedId = state.articles.some((article) => String(article.id) === String(state.selectedId)) ? state.selectedId : first?.id;
   renderCourse();
   renderResources();
 }
@@ -106,11 +106,11 @@ $("#article-list").addEventListener("click", (event) => { const button = event.t
 $("#search-input").addEventListener("input", renderCourse);
 
 function openAdmin() { $("#admin-modal").classList.remove("hidden"); renderAdminList(); }
-async function renderAdminList() { const { data, error } = await db.from("articles").select("*").order("course").order("sort_order"); if (error) { message("#admin-message", error.message); return; } $("#admin-list").innerHTML = (data || []).map((article) => `<div class="admin-row"><span><strong>${escapeHtml(article.title)}</strong><small>${article.course} · ${article.status}</small></span><button data-edit="${article.id}" type="button">Изменить</button><button data-delete="${article.id}" type="button">Удалить</button></div>`).join(""); }
+async function renderAdminList() { const { data, error } = await db.from("articles").select("*").order("course").order("sort_order"); if (error) { message("#admin-message", error.message); return; } state.adminArticles = data || []; $("#admin-list").innerHTML = state.adminArticles.map((article) => `<div class="admin-row"><span><strong>${escapeHtml(article.title)}</strong><small>${article.course} · ${article.status}</small></span><button data-edit="${article.id}" type="button">Изменить</button><button class="danger-button" data-delete="${article.id}" type="button">Удалить</button></div>`).join(""); }
 $("#admin-open").addEventListener("click", openAdmin);
 document.querySelectorAll("[data-close-admin]").forEach((element) => element.addEventListener("click", () => $("#admin-modal").classList.add("hidden")));
 $("#article-form").addEventListener("submit", async (event) => { event.preventDefault(); const id = $("#edit-id").value; const payload = { course: $("#edit-course").value, title: $("#edit-title").value.trim(), description: $("#edit-description").value.trim(), content: $("#edit-content").value, status: $("#edit-status").value, sort_order: Number($("#edit-order").value || 0) }; const result = id ? await db.from("articles").update(payload).eq("id", id) : await db.from("articles").insert(payload); if (result.error) { message("#admin-message", result.error.message); return; } message("#admin-message", "Статья сохранена.", true); event.target.reset(); $("#edit-id").value = ""; await renderAdminList(); await loadArticles(); });
-$("#admin-list").addEventListener("click", async (event) => { const edit = event.target.closest("[data-edit]"); const remove = event.target.closest("[data-delete]"); if (edit) { const article = state.articles.find((item) => String(item.id) === edit.dataset.edit); if (article) { $("#edit-id").value = article.id; $("#edit-course").value = article.course; $("#edit-title").value = article.title; $("#edit-description").value = article.description; $("#edit-content").value = article.content; $("#edit-status").value = article.status; $("#edit-order").value = article.sort_order; } } if (remove && window.confirm("Архивировать статью?")) { await db.from("articles").update({ status: "archived" }).eq("id", remove.dataset.delete); await renderAdminList(); await loadArticles(); } });
+$("#admin-list").addEventListener("click", async (event) => { const edit = event.target.closest("[data-edit]"); const remove = event.target.closest("[data-delete]"); if (edit) { const article = state.adminArticles.find((item) => String(item.id) === edit.dataset.edit); if (article) { $("#edit-id").value = article.id; $("#edit-course").value = article.course; $("#edit-title").value = article.title; $("#edit-description").value = article.description; $("#edit-content").value = article.content; $("#edit-status").value = article.status; $("#edit-order").value = article.sort_order; } } if (remove && window.confirm("Удалить статью безвозвратно? Связанный прогресс также будет удалён.")) { const { error } = await db.from("articles").delete().eq("id", remove.dataset.delete); if (error) { message("#admin-message", error.message); return; } message("#admin-message", "Статья удалена.", true); await renderAdminList(); await loadArticles(); } });
 
 db.auth.getSession().then(({ data }) => data.session && enterApp(data.session).catch((error) => message("#auth-message", error.message)));
 db.auth.onAuthStateChange((_event, session) => { if (session && !state.user) enterApp(session).catch((error) => message("#auth-message", error.message)); if (!session) { state.user = null; $("#auth-screen").classList.remove("hidden"); $("#app").classList.add("hidden"); } });
