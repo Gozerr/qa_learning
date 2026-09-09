@@ -16,7 +16,7 @@
 ## Первичная настройка
 
 1. Выполните `supabase-setup.sql` в SQL Editor проекта Supabase.
-2. Проверьте email владельца в `insert into public.access_members`.
+2. В SQL seed замените `tuman199654@gmail.com` на email своего Supabase-аккаунта. Повторный запуск автоматически выдаст этому email роль администратора и статус `approved`.
 3. В Authentication → URL Configuration добавьте `https://gozerr.github.io/qa_learning/`.
 4. Включите GitHub Pages через GitHub Actions.
 5. После входа администратор открывает CMS и управляет статьями.
@@ -46,3 +46,13 @@ python -m http.server 8000
 административные токены нельзя добавлять в репозиторий. Полноценное rate limiting
 для входа и заявок должно быть включено в настройках Supabase Auth/Edge Functions
 перед большим публичным запуском.
+
+Если аккаунт уже создан, можно выполнить отдельно:
+
+```sql
+update public.access_members
+set is_admin = true, status = 'approved'
+where email = lower('ваш-email@example.com');
+```
+
+После изменения роли выйдите из приложения и войдите снова.

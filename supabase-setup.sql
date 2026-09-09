@@ -82,7 +82,7 @@ create table if not exists public.quiz_questions (
 
 insert into public.access_members (email, is_admin)
 values ('tuman199654@gmail.com', true)
-on conflict (email) do update set is_admin = true;
+on conflict (email) do update set is_admin = true, status = 'approved';
 
 insert into public.articles (section, category, title, description, content, read_time, color, icon, sort_order)
 select seed.section, seed.category, seed.title, seed.description, seed.content, seed.read_time, seed.color, seed.icon, seed.sort_order

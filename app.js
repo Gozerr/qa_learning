@@ -11,7 +11,9 @@ function redirectUrl() {
 }
 
 async function getMember(user) {
-  const { data, error } = await db.from("access_members").select("id,email,is_admin,status").eq("email", user.email.toLowerCase()).maybeSingle();
+  const email = user.email?.trim().toLowerCase();
+  if (!email) throw new Error("У аккаунта Supabase отсутствует email.");
+  const { data, error } = await db.from("access_members").select("id,email,is_admin,status").eq("email", email).maybeSingle();
   if (error) throw error;
   return data;
 }
@@ -26,7 +28,8 @@ async function enterApp(session) {
   state.user = session.user; state.member = member;
   $("#auth-screen").classList.add("hidden"); $("#app").classList.remove("hidden");
   $("#admin-open").classList.toggle("hidden", !member.is_admin);
-  $("#current-user").textContent = session.user.email;
+  $("#admin-open").textContent = member.is_admin ? "CMS · Admin" : "CMS";
+  $("#current-user").textContent = `${member.is_admin ? "Администратор" : "Участник"} · ${session.user.email}`;
   await Promise.all([loadArticles(), loadProgress()]);
 }
 
