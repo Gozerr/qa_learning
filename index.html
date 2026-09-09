@@ -3,109 +3,89 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="QA Guide — бесплатная карта знаний и практики для самостоятельного изучения тестирования ПО." />
-    <title>QA Guide — путь в тестирование</title>
+    <meta name="description" content="QA Guide — закрытая база знаний по Manual QA и Automation QA на Python." />
+    <title>QA Guide — закрытая база знаний</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="page-shell">
-      <header class="topbar">
-        <a class="brand" href="#home" aria-label="QA Guide — на главную">
-          <span class="brand-mark">&lt;/&gt;</span>
-          <span class="brand-name">QA Guide</span>
-        </a>
-        <button id="mobile-menu-button" class="mobile-menu-button" type="button" aria-expanded="false" aria-controls="main-nav">Меню</button>
-        <nav id="main-nav" class="nav" aria-label="Главная навигация">
-          <a href="#home">Главная</a>
-          <a href="#materials">Материалы</a>
-          <a href="#practice">Практика</a>
-          <a href="#tools">Инструменты</a>
-          <a href="#useful">Полезное</a>
-        </nav>
-        <form id="search-form" class="header-search" role="search">
-          <label class="sr-only" for="global-search">Поиск по материалам</label>
-          <span aria-hidden="true">⌕</span>
-          <input id="global-search" type="search" placeholder="Поиск по материалам..." autocomplete="off" />
+    <div id="auth-screen" class="auth-screen">
+      <div class="auth-glow"></div>
+      <main class="auth-card">
+        <div class="brand brand--center"><span class="brand-mark">&lt;/&gt;</span><span>QA Guide</span></div>
+        <p class="eyebrow">Private knowledge base</p>
+        <h1>Тестирование —<br /><span>системно и по делу.</span></h1>
+        <p class="auth-lead">Закрытая база знаний по Manual QA и Automation QA на Python: теория, практика и рабочие примеры.</p>
+        <form id="auth-form" class="stack-form">
+          <label>Email<input id="auth-email" type="email" autocomplete="email" required placeholder="you@example.com" /></label>
+          <label id="password-field">Пароль<input id="auth-password" type="password" autocomplete="current-password" minlength="6" placeholder="Минимум 6 символов" /></label>
+          <button class="primary-button" type="submit"><span id="auth-submit-label">Войти</span><span>→</span></button>
         </form>
+        <button id="auth-mode-toggle" class="link-button" type="button">Войти по ссылке из email</button>
+        <button id="request-access-button" class="link-button" type="button">Запросить доступ</button>
+        <p id="auth-message" class="form-message" role="status"></p>
+        <p class="auth-note">Материалы доступны только приглашённым и одобренным пользователям.</p>
+      </main>
+    </div>
+
+    <div id="request-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="request-title">
+      <div class="modal-backdrop" data-close-request></div>
+      <article class="modal-card">
+        <button class="modal-close" type="button" data-close-request aria-label="Закрыть">×</button>
+        <p class="eyebrow">Request access</p>
+        <h2 id="request-title">Запросить доступ</h2>
+        <form id="request-form" class="stack-form">
+          <label>Имя<input id="request-name" required maxlength="80" /></label>
+          <label>Email<input id="request-email" type="email" required /></label>
+          <label>Зачем нужен доступ?<textarea id="request-message" rows="4" maxlength="1000" required></textarea></label>
+          <button class="primary-button" type="submit">Отправить заявку <span>→</span></button>
+        </form>
+        <p id="request-status" class="form-message" role="status"></p>
+      </article>
+    </div>
+
+    <div id="app" class="app hidden">
+      <header class="app-header">
+        <a class="brand" href="#home"><span class="brand-mark">&lt;/&gt;</span><span>QA Guide</span></a>
+        <nav class="app-nav" aria-label="Основная навигация">
+          <a href="#home">Главная</a><a href="#courses">Курсы</a><a href="#practice">Практика</a><a href="#tools">Инструменты</a>
+        </nav>
+        <div class="header-actions">
+          <label class="header-search"><span>⌕</span><input id="search-input" type="search" placeholder="Поиск по материалам..." /></label>
+          <button id="admin-open" class="icon-button hidden" type="button" title="CMS">CMS</button>
+          <button id="logout-button" class="ghost-button" type="button">Выйти</button>
+        </div>
       </header>
 
       <main>
-        <section id="home" class="hero">
-          <div class="hero-copy">
-            <p class="eyebrow eyebrow--light">Бесплатная база знаний</p>
-            <h1>QA Guide —<br />путь в тестирование</h1>
-            <p>Разберись в основах QA, двигайся по понятному плану и находи места, где можно попробовать знания на практике.</p>
-            <div class="hero-actions">
-              <a class="primary-button" href="#materials">Начать с основ <span>→</span></a>
-              <a class="secondary-button secondary-button--hero" href="#practice">Перейти к практике</a>
-            </div>
-            <div class="hero-note"><span>✓</span> Не школа и не курс — самостоятельный навигатор по профессии.</div>
-          </div>
-          <div class="hero-visual" aria-hidden="true">
-            <div class="visual-grid"></div>
-            <div class="visual-card visual-card--main"><span class="visual-kicker">LEARNING PATH</span><strong>Основы<br />→ API<br />→ SQL</strong><small>11 шагов без лишнего шума</small></div>
-            <div class="visual-card visual-card--float"><span>Практика</span><strong>01</strong></div>
-            <div class="visual-dot visual-dot--one"></div>
-            <div class="visual-dot visual-dot--two"></div>
-          </div>
+        <section id="home" class="dashboard-hero">
+          <div><p class="eyebrow eyebrow--light">QA Guide · private</p><h1>Учи тестирование<br /><span>в правильном порядке.</span></h1><p>Две самостоятельные траектории, реальные примеры и практика без обещаний «трудоустройства за 30 дней».</p><div class="hero-actions"><a class="primary-button" href="#courses">Открыть курсы <span>→</span></a><a class="outline-button" href="#practice">К практике</a></div></div>
+          <div class="dashboard-stats"><div><strong id="completed-count">0</strong><span>тем пройдено</span></div><div><strong id="article-count">0</strong><span>опубликовано</span></div><div><strong id="progress-percent">0%</strong><span>твой прогресс</span></div></div>
         </section>
 
-        <section class="intro-section">
-          <div>
-            <p class="eyebrow">Что внутри</p>
-            <h2>Сначала понять.<br />Потом попробовать.</h2>
-          </div>
-          <div class="benefits-grid">
-            <article><span class="benefit-icon">01</span><h3>Понятная теория</h3><p>Сложные термины объясняются простым языком, с примерами и связями между темами.</p></article>
-            <article><span class="benefit-icon">02</span><h3>Понятный путь</h3><p>Иди от основ тестирования к вебу, API, SQL и автоматизации в разумном порядке.</p></article>
-            <article><span class="benefit-icon">03</span><h3>Реальная практика</h3><p>Закрепляй материал на задачах и переходи к проверенным внешним тренажёрам.</p></article>
-            <article><span class="benefit-icon">04</span><h3>Нужные инструменты</h3><p>DevTools, Postman, Git, Selenium и Playwright — с объяснением, когда они нужны.</p></article>
-          </div>
+        <section id="courses" class="workspace-section">
+          <div class="section-heading"><div><p class="eyebrow">Learning paths</p><h2>Два направления</h2></div><p id="search-caption">Выбери курс и изучай материалы последовательно.</p></div>
+          <div class="course-tabs"><button class="course-tab active" data-course="manual" type="button">Manual QA <small>Ручное тестирование</small></button><button class="course-tab" data-course="automation" type="button">Automation QA — Python <small>Автоматизация с нуля</small></button></div>
+          <div class="course-layout"><aside class="course-sidebar"><div class="sidebar-top"><strong id="course-title">Manual QA</strong><span id="course-count">0 тем</span></div><div id="article-list" class="article-list"></div></aside><article id="reader" class="reader"></article></div>
         </section>
 
-        <section id="materials" class="content-section">
-          <div class="section-heading">
-            <div><p class="eyebrow">Структура обучения</p><h2>Учебный маршрут</h2></div>
-            <p>Выбирай тему, читай статью, выполняй задание и отмечай шаг пройденным.</p>
-          </div>
-          <div class="progress-summary">
-            <div><div class="progress-label"><strong id="progress-title">Твой прогресс</strong><span id="progress-value">0 из 11</span></div><div class="progress-track"><span id="progress-bar"></span></div></div>
-            <button id="reset-progress" class="text-button" type="button">Сбросить прогресс</button>
-          </div>
-          <div class="knowledge-layout">
-            <aside class="topic-sidebar" aria-label="Учебный маршрут">
-              <div class="sidebar-title"><span>Путь QA</span><span id="topic-count">11 тем</span></div>
-              <div id="topic-list" class="topic-list"></div>
-            </aside>
-            <article id="article-view" class="article-view" aria-live="polite"></article>
-          </div>
-        </section>
-
-        <section id="practice" class="resources-section">
-          <div class="section-heading"><div><p class="eyebrow">Где попробовать</p><h2>Практика без регистрации на курс</h2></div><p>Практические направления разделены по задачам, чтобы было понятно, что именно тренировать.</p></div>
-          <div id="practice-grid" class="resource-grid"></div>
-        </section>
-
-        <section id="tools" class="tools-section">
-          <div class="section-heading"><div><p class="eyebrow">Рабочий набор</p><h2>Инструменты тестировщика</h2></div><p>Не нужно учить всё сразу. Открывай инструмент тогда, когда он появляется в учебном маршруте.</p></div>
-          <div id="tools-grid" class="tools-grid"></div>
-        </section>
-
-        <section id="useful" class="useful-section">
-          <div><p class="eyebrow eyebrow--light">Полезное</p><h2>Сохраняй любопытство</h2><p>QA — это привычка задавать вопросы, проверять предположения и докапываться до причин.</p></div>
-          <a class="secondary-button" href="#materials">Вернуться к маршруту <span>↑</span></a>
-        </section>
+        <section id="practice" class="resource-section"><div class="section-heading"><div><p class="eyebrow">Practice</p><h2>Практика после теории</h2></div><p>Задачи помогают превратить термин в рабочий навык.</p></div><div id="practice-grid" class="resource-grid"></div></section>
+        <section id="tools" class="resource-section resource-section--muted"><div class="section-heading"><div><p class="eyebrow">Toolkit</p><h2>Инструменты QA</h2></div><p>Официальные документации и инструменты, которые пригодятся в работе.</p></div><div id="tools-grid" class="resource-grid"></div></section>
       </main>
-
-      <footer class="site-footer">
-        <a class="brand brand--footer" href="#home"><span class="brand-mark">&lt;/&gt;</span><span class="brand-name">QA Guide</span></a>
-        <span>Бесплатная карта знаний для самостоятельного изучения QA</span>
-        <span>2026</span>
-      </footer>
+      <footer class="app-footer"><span>QA Guide · private knowledge base</span><span id="current-user"></span></footer>
     </div>
+
+    <div id="admin-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="admin-title">
+      <div class="modal-backdrop" data-close-admin></div>
+      <article class="modal-card admin-card"><button class="modal-close" type="button" data-close-admin aria-label="Закрыть">×</button><p class="eyebrow">Content management</p><h2 id="admin-title">Управление статьями</h2>
+        <form id="article-form" class="stack-form"><input id="edit-id" type="hidden" /><label>Курс<select id="edit-course"><option value="manual">Manual QA</option><option value="automation">Automation QA — Python</option></select></label><label>Название<input id="edit-title" required /></label><label>Краткое описание<input id="edit-description" required /></label><label>Содержание HTML<textarea id="edit-content" rows="10" required></textarea></label><div class="form-grid"><label>Статус<select id="edit-status"><option value="draft">Черновик</option><option value="published">Опубликовано</option><option value="archived">Архив</option></select></label><label>Порядок<input id="edit-order" type="number" min="0" value="0" /></label></div><button class="primary-button" type="submit">Сохранить статью <span>→</span></button></form>
+        <p id="admin-message" class="form-message"></p><div id="admin-list" class="admin-list"></div>
+      </article>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
