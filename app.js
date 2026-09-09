@@ -1,641 +1,265 @@
-const SUPABASE_URL = "https://hberfcawhmudegydhtnb.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_W99wvJK_aI_NOhLx9-y8TQ_tx9FQct_";
-const DEPLOYED_SITE_URL = "https://gozerr.github.io/qa_learning/";
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { detectSessionInUrl: false },
-});
+const topics = [
+  {
+    id: "basics", order: 1, title: "Основы тестирования", description: "Понять, что такое тестирование и зачем оно нужно.", icon: "01",
+    definition: "Тестирование ПО — это процесс проверки программного продукта и связанных с ним материалов, который помогает оценить качество, соответствие требованиям и обнаружить дефекты.",
+    simple: "Тестировщик не просто нажимает кнопки. Он собирает информацию о продукте, сравнивает поведение с ожиданиями и ищет ситуации, в которых система может подвести пользователя.",
+    why: "Без базового понимания качества и дефектов легко проверять случайные вещи и пропускать важные риски.",
+    how: ["Изучить требования и контекст продукта.", "Выбрать важные сценарии и данные.", "Выполнить проверки и записать наблюдения.", "Сравнить ожидаемый и фактический результат.", "Передать команде понятную информацию о найденных рисках."],
+    example: "В интернет-магазине проверяем добавление товара в корзину: количество, цену, удаление товара и сохранение корзины после обновления страницы.",
+    qa: "Для формы входа проверяем корректные и некорректные данные, пустые поля, сообщения об ошибках, восстановление пароля и поведение после нескольких попыток.",
+    mistakes: ["Считать, что успешный тест доказывает отсутствие всех дефектов.", "Проверять только позитивный сценарий.", "Описывать проблему без шагов и ожидаемого результата."],
+    remember: "Тестирование показывает наличие дефектов, но не доказывает их полное отсутствие.",
+    task: "Возьми любую форму на сайте и составь 10 проверок: позитивные, негативные, граничные и проверки удобства.",
+    related: ["Виды и уровни тестирования", "Тест-дизайн", "Тестовая документация"]
+  },
+  {
+    id: "types", order: 2, title: "Виды и уровни тестирования", description: "Разобраться в классификациях тестирования.", icon: "02",
+    definition: "Виды тестирования описывают цель и способ проверки, а уровни — масштаб объекта, который проверяется: от отдельного компонента до системы целиком.",
+    simple: "Один и тот же продукт можно проверять с разных сторон: работает ли функция, быстро ли она работает, не сломалось ли старое после изменений.",
+    why: "Классификация помогает выбрать подходящий набор проверок, а не называть любой прогон тестов «регрессией».",
+    how: ["Функциональное — проверяет, что система делает.", "Нефункциональное — проверяет характеристики: скорость, безопасность, удобство.", "Smoke — быстро оценивает стабильность сборки.", "Retest — проверяет конкретное исправление.", "Regression — ищет побочные эффекты изменений."],
+    example: "После изменения скидки retest проверит сам расчёт скидки, а regression дополнительно проверит корзину, оплату и итоговую сумму.",
+    qa: "На уровне интеграции можно проверить, что форма заказа передаёт данные в API, а API корректно сохраняет их в базе.",
+    mistakes: ["Использовать smoke как замену полному тестированию.", "Путать retest и regression.", "Смешивать вид тестирования и уровень тестирования."],
+    remember: "Retest отвечает на вопрос «исправлен ли этот дефект?», regression — «не сломалось ли что-то ещё?»",
+    task: "Для изменения «добавили промокод» составь отдельные списки smoke, retest и regression-проверок.",
+    related: ["Основы тестирования", "Жизненный цикл разработки", "Тестовая документация"]
+  },
+  {
+    id: "sdlc", order: 3, title: "Жизненный цикл разработки и тестирования", description: "Понять, где находится QA в процессе создания продукта.", icon: "03",
+    definition: "SDLC — жизненный цикл разработки ПО. STLC — совокупность процессов и активностей, связанных с тестированием продукта.",
+    simple: "QA подключается не только в момент, когда разработчик уже написал код. Хорошие вопросы можно задавать на этапе требований, дизайна и планирования.",
+    why: "Раннее обнаружение неоднозначного требования обычно дешевле и полезнее, чем поиск проблемы после релиза.",
+    how: ["Анализ требований и рисков.", "Планирование подхода к тестированию.", "Подготовка тестовой документации и данных.", "Проверка сборки и окружения.", "Выполнение тестов, отчётность и завершение тестирования."],
+    example: "В user story про восстановление пароля заранее уточняем срок жизни ссылки, поведение неизвестного email и требования к новому паролю.",
+    qa: "В Scrum тестировщик участвует в refinement, проверяет критерии приёмки в спринте и делится рисками на review и retrospective.",
+    mistakes: ["Воспринимать QA как финальный фильтр перед релизом.", "Начинать тесты без понимания критериев приёмки.", "Игнорировать изменения требований."],
+    remember: "Качество — ответственность всей команды, а не только человека, который выполняет тесты.",
+    task: "Возьми простую user story и выпиши вопросы, которые нужно задать до начала разработки.",
+    related: ["Основы тестирования", "Тестовая документация", "Тест-дизайн"]
+  },
+  {
+    id: "design", order: 4, title: "Тест-дизайн", description: "Научиться придумывать эффективные проверки.", icon: "04",
+    definition: "Тест-дизайн — процесс выбора тестовых условий и случаев, которые дают достаточное покрытие при разумных затратах.",
+    simple: "Вместо случайного перебора значений мы выбираем representative cases: классы эквивалентности, границы, комбинации условий и вероятные ошибки.",
+    why: "Время ограничено. Техники тест-дизайна помогают находить больше важных дефектов меньшим количеством проверок.",
+    how: ["Разделить входные данные на эквивалентные классы.", "Проверить значения на границах и рядом с ними.", "Использовать таблицу решений для комбинаций условий.", "Описать переходы между состояниями.", "Добавить проверки на основе опыта — error guessing."],
+    example: "Для возраста 18–65 достаточно начать с 17, 18, 19, 30, 64, 65 и 66, а не проверять каждый год.",
+    qa: "Для формы оплаты таблица решений может комбинировать авторизацию пользователя, наличие товара и доступность способа оплаты.",
+    mistakes: ["Проверять только среднее допустимое значение.", "Забывать отрицательные классы.", "Создавать много дубликатов, не покрывающих новые риски."],
+    remember: "Хороший тест — не самый длинный, а тот, который проверяет конкретный риск.",
+    task: "Составь набор тестов для поля «пароль от 8 до 20 символов» с эквивалентными классами и границами.",
+    related: ["Основы тестирования", "Тестовая документация", "Виды и уровни тестирования"]
+  },
+  {
+    id: "documentation", order: 5, title: "Тестовая документация", description: "Научиться работать с чек-листами, тест-кейсами и баг-репортами.", icon: "05",
+    definition: "Тестовая документация фиксирует условия, проверки, результаты и найденные проблемы так, чтобы другой участник команды мог понять и повторить работу.",
+    simple: "Документ — это не бюрократия ради бюрократии. Он помогает не держать проверки в голове и передавать контекст без потери смысла.",
+    why: "Понятный баг-репорт экономит время разработчикам, а хороший чек-лист делает повторную проверку стабильной.",
+    how: ["Чек-лист перечисляет проверки кратко.", "Тест-кейс описывает предусловия, шаги, данные и ожидаемый результат.", "Bug report описывает окружение, шаги, expected и actual result, severity и priority."],
+    example: "Заголовок бага: «[Cart] Товар не удаляется после нажатия “Удалить”». Далее — окружение, шаги, ожидание и факт.",
+    qa: "Если дефект воспроизводится только после обновления страницы, это обязательно указываем в предусловиях или шагах.",
+    mistakes: ["Писать заголовок вроде «Не работает корзина».", "Смешивать ожидаемый и фактический результат.", "Не указывать окружение и данные."],
+    remember: "Хороший отчёт позволяет воспроизвести проблему без устного объяснения.",
+    task: "Оформи баг-репорт для любого дефекта на демо-сайте: добавь точный заголовок, шаги, expected, actual и severity.",
+    related: ["Тест-дизайн", "Виды и уровни тестирования", "Веб-тестирование"]
+  },
+  {
+    id: "web", order: 6, title: "Веб-тестирование", description: "Понять, как работают браузер, клиент, сервер и HTTP.", icon: "06",
+    definition: "Веб-тестирование проверяет работу веб-приложения в браузере, включая интерфейс, сетевое взаимодействие, данные, совместимость и ошибки.",
+    simple: "Браузер — клиент: он отправляет запросы. Сервер обрабатывает их и возвращает HTML, JSON, изображения или ошибку.",
+    why: "Понимание цепочки клиент → сеть → сервер помогает искать причину, а не только фиксировать внешний симптом.",
+    how: ["Проверить интерфейс и состояния элементов.", "Посмотреть запрос в Network.", "Проверить HTTP-метод, статус, headers и body.", "Сравнить поведение в разных браузерах и размерах экрана.", "Проверить cookies и localStorage."],
+    example: "Если список не загрузился, в DevTools проверяем: ушёл ли запрос, какой статус вернулся и что лежит в response.",
+    qa: "Для формы регистрации проверяем валидацию на клиенте, ответ API, повторную отправку и отображение ошибки сервера.",
+    mistakes: ["Проверять только happy path.", "Не отличать ошибку интерфейса от ошибки API.", "Не проверять мобильный viewport."],
+    remember: "Визуальная проблема и проблема данных могут иметь разные причины.",
+    task: "Открой DevTools на любом сайте и найди один GET-запрос: запиши URL, статус, метод и кратко опиши response.",
+    related: ["DevTools", "API", "Основы тестирования"]
+  },
+  {
+    id: "devtools", order: 7, title: "DevTools", description: "Научиться исследовать веб-приложение через инструменты браузера.", icon: "07",
+    definition: "Chrome DevTools — набор инструментов разработчика для исследования DOM, CSS, JavaScript, сети, хранилищ и производительности страницы.",
+    simple: "Это рабочая лупа тестировщика: можно увидеть, что реально отрисовано, какие запросы ушли и какие ошибки возникли.",
+    why: "DevTools помогает быстро локализовать проблему и приложить к багу полезные технические данные.",
+    how: ["Elements — DOM и стили.", "Console — сообщения и JavaScript-ошибки.", "Network — запросы, статусы, headers, response.", "Application — cookies, localStorage и sessionStorage."],
+    example: "В Network можно включить Preserve log, воспроизвести ошибку и сохранить запрос с ответом для анализа.",
+    qa: "Если кнопка выглядит доступной, но не работает, Console и Network часто показывают ошибку обработчика или API.",
+    mistakes: ["Менять CSS в DevTools и считать, что это исправило продукт.", "Смотреть только статус запроса без response.", "Не фиксировать timestamp и окружение."],
+    remember: "DevTools — источник наблюдений, а не доказательство причины без проверки гипотезы.",
+    task: "Найди на странице элемент через Elements, измени ему стиль и проверь в Network один запрос при взаимодействии.",
+    related: ["Веб-тестирование", "API", "Тестовая документация"]
+  },
+  {
+    id: "api", order: 8, title: "API и Postman", description: "Понять HTTP API и научиться проверять API.", icon: "08",
+    definition: "API — интерфейс взаимодействия программ по заранее определённым правилам. HTTP API использует запросы и ответы: метод, URL, заголовки, тело и статус.",
+    simple: "Клиент отправляет договорённый запрос, сервер возвращает результат. Тестировщик проверяет не только статус, но и смысл ответа.",
+    why: "Проверка API помогает находить дефекты быстрее и отделять проблемы интерфейса от проблем сервера.",
+    how: ["Выбрать метод и URL.", "Добавить параметры, headers и body.", "Отправить запрос.", "Проверить status code, schema, данные, права и время ответа.", "Проверить некорректные входные данные."],
+    example: "GET /users/42 должен вернуть пользователя 42. POST /users с валидным JSON должен создать ресурс и вернуть 201.",
+    qa: "Для endpoint авторизации проверяем успешный вход, неверный пароль, пустые поля, 401/403 и отсутствие лишних данных в ответе.",
+    mistakes: ["Считать 200 доказательством корректного результата.", "Не проверять обязательные поля и типы данных.", "Не тестировать права доступа."],
+    remember: "Статус-код, тело ответа и headers нужно оценивать вместе.",
+    task: "Создай в Postman коллекцию из GET и POST-запросов к публичному API и добавь минимум три негативные проверки.",
+    related: ["Веб-тестирование", "DevTools", "Тестовая документация"]
+  },
+  {
+    id: "sql", order: 9, title: "SQL", description: "Научиться получать и проверять данные в базе.", icon: "09",
+    definition: "SQL — язык для работы с реляционными базами данных: получения, фильтрации, сортировки, группировки и объединения данных.",
+    simple: "Через SQL тестировщик может проверить, что действие в приложении привело к правильному состоянию данных.",
+    why: "UI показывает только часть состояния. База помогает подтвердить, что запись действительно создана, изменена или связана с другой записью.",
+    how: ["SELECT получает данные.", "WHERE фильтрует строки.", "ORDER BY сортирует.", "GROUP BY агрегирует.", "JOIN объединяет таблицы по связанному полю."],
+    example: "SELECT * FROM users WHERE id = 10; найдёт пользователя с id 10.",
+    qa: "После оформления заказа проверяем запись заказа, его статус и связь с user_id и товарами.",
+    mistakes: ["Запускать UPDATE или DELETE без WHERE.", "Путать фильтр и сортировку.", "Проверять только наличие строки, но не значения и связи."],
+    remember: "SQL-проверка должна отвечать на конкретный вопрос о состоянии данных.",
+    task: "На учебной базе напиши запросы для поиска пользователей без email, подсчёта заказов по статусам и объединения users с orders.",
+    related: ["Веб-тестирование", "API", "Основы тестирования"]
+  },
+  {
+    id: "practice", order: 10, title: "Практика", description: "Перенести знания на реальные задачи.", icon: "10",
+    definition: "Практика — самостоятельное применение изученных техник к продукту, задаче или учебному окружению с фиксацией результата.",
+    simple: "Знание термина становится навыком, когда ты можешь выбрать проверку, объяснить риск и оформить наблюдение.",
+    why: "Практика показывает пробелы, которые невозможно заметить при чтении теории.",
+    how: ["Выбрать объект и цель проверки.", "Описать риски и границы.", "Составить проверки.", "Выполнить их в разных условиях.", "Оформить результаты и выводы."],
+    example: "На демо-магазине составляем чек-лист корзины, проверяем его на desktop и mobile, затем оформляем найденные дефекты.",
+    qa: "Практическое портфолио может содержать чек-лист, несколько тест-кейсов, баг-репорты и коллекцию API-запросов.",
+    mistakes: ["Собирать только скриншоты без объяснения.", "Проверять продукт бессистемно.", "Не перепроверять найденный дефект."],
+    remember: "Практика — это не количество кликов, а качество вопросов и выводов.",
+    task: "Выбери знакомый сайт и подготовь мини-отчёт: цель, риски, 15 проверок, найденные проблемы и рекомендации.",
+    related: ["Тестовая документация", "Тест-дизайн", "Веб-тестирование"]
+  },
+  {
+    id: "automation", order: 11, title: "Автоматизация", description: "Познакомиться с автоматизацией тестирования.", icon: "11",
+    definition: "Автоматизация тестирования — использование программ и скриптов для выполнения проверок и обработки результатов с минимальным ручным вмешательством.",
+    simple: "Повторяющийся сценарий можно описать кодом, чтобы запускать его быстро и одинаково. Но автоматизация не заменяет исследовательское мышление.",
+    why: "Автотесты полезны для повторяемых проверок, smoke и regression, особенно после изменений.",
+    how: ["Выбрать стабильный сценарий.", "Найти элементы локаторами.", "Дождаться нужного состояния.", "Выполнить действия и assertions.", "Сохранить результат и диагностические данные."],
+    example: "Тест открывает страницу входа, вводит данные, нажимает кнопку и проверяет появление личного кабинета.",
+    qa: "Playwright поддерживает локаторы, auto-waiting, browser contexts, tracing и параллельный запуск.",
+    mistakes: ["Автоматизировать нестабильный сценарий.", "Использовать длинные sleep вместо ожидания состояния.", "Писать тест без понятного assertion."],
+    remember: "Сначала нужно понимать, что и зачем проверять вручную, а уже потом автоматизировать.",
+    task: "Выбери один стабильный сценарий и опиши его как автотест: setup, действия, локаторы, ожидания и assertions.",
+    related: ["Тест-дизайн", "DevTools", "Практика"]
+  }
+];
+
+const practiceResources = [
+  { title: "Manual QA", description: "Чек-листы, тест-кейсы и баг-репорты на учебных веб-продуктах.", type: "Практика", url: "https://www.guru99.com/software-testing.html" },
+  { title: "API", description: "Отправка запросов, проверки ответов и работа с коллекциями.", type: "API", url: "https://www.postman.com/" },
+  { title: "SQL", description: "Запросы к учебным базам и тренировка фильтрации данных.", type: "Базы данных", url: "https://www.sql-practice.com/" },
+  { title: "Test Design", description: "Граничные значения, классы эквивалентности и таблицы решений.", type: "Тест-дизайн", url: "https://istqb.org/" },
+  { title: "Automation", description: "Первые сценарии в браузере и знакомство с Playwright.", type: "Автоматизация", url: "https://playwright.dev/docs/intro" }
+];
+
+const tools = [
+  { title: "Chrome DevTools", category: "Браузер", description: "DOM, Console, Network и Application.", url: "https://developer.chrome.com/docs/devtools/" },
+  { title: "Postman", category: "API", description: "Запросы, коллекции и проверки API.", url: "https://www.postman.com/" },
+  { title: "DBeaver", category: "База данных", description: "Работа с SQL-базами через удобный интерфейс.", url: "https://dbeaver.io/" },
+  { title: "Git", category: "Версии", description: "История изменений и совместная работа с кодом.", url: "https://git-scm.com/docs" },
+  { title: "Playwright", category: "Автоматизация", description: "Современная автоматизация браузеров.", url: "https://playwright.dev/docs/intro" }
+];
+
+const progressKey = "qa-guide-progress";
+let completed = new Set(JSON.parse(localStorage.getItem(progressKey) || "[]"));
+let selectedTopicId = topics[0].id;
+
 const $ = (selector) => document.querySelector(selector);
-const accessScreen = $("#access-screen");
-const app = $("#app");
-let materials = [];
-let currentMember = null;
-let currentUser = null;
-let profile = null;
-let completedArticles = new Set();
-let editingArticleId = null;
-let activeSection = "theory";
-let activeCategory = null;
-let authMode = "password";
-let showCompletedOnly = false;
-let activeArticleId = null;
+const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[character]));
 
-const normalize = (value = "") => value.trim().toLowerCase();
-const escapeHtml = (value = "") => String(value).replace(/[&<>"']/g, (character) => ({
-  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;",
-}[character]));
-const showMessage = (element, text, success = false) => {
-  element.textContent = text;
-  element.style.color = success ? "#4f8b55" : "";
-};
-const getAuthRedirectUrl = () => {
-  const { hostname, origin, pathname } = window.location;
-  if (hostname.endsWith(".github.io")) return `${origin}${pathname}`;
-  if (hostname === "localhost" || hostname === "127.0.0.1" || origin === "null") return DEPLOYED_SITE_URL;
-  return `${origin}${pathname}`;
-};
-const authLinkExpiredMessage = "Ссылка устарела или уже использована. Запросите новое письмо и откройте последнюю ссылку.";
-
-function clearAuthCallbackUrl(removeHash = false) {
-  const url = new URL(window.location.href);
-  ["code", "error", "error_code", "error_description"].forEach((key) => url.searchParams.delete(key));
-  if (removeHash) url.hash = "";
-  window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
-}
-function isExpiredAuthError(error) {
-  const message = String(error?.message || error || "").toLowerCase();
-  return message.includes("expired") || message.includes("invalid token")
-    || message.includes("already been used") || message.includes("otp_expired")
-    || message.includes("access_denied");
+function saveProgress() {
+  localStorage.setItem(progressKey, JSON.stringify([...completed]));
 }
 
-function showAuthCallbackError(error) {
-  const message = isExpiredAuthError(error)
-    ? authLinkExpiredMessage
-    : `Не удалось открыть ссылку для входа: ${error?.message || error}.`;
-  showMessage($("#access-message"), message);
-}
-
-async function isAllowed(user) {
-  const { data, error } = await db.from("access_members").select("id,email,is_admin").eq("email", normalize(user.email)).maybeSingle();
-  if (error) throw error;
-  currentMember = data;
-  return Boolean(data);
-}
-
-async function loadProfile() {
-  const { data, error } = await db.from("profiles").select("*").eq("id", currentUser.id).maybeSingle();
-  if (error) throw error;
-  profile = data || { id: currentUser.id, email: currentUser.email, display_name: "", avatar_url: null };
-  if (!data) {
-    const result = await db.from("profiles").upsert(profile).select().single();
-    if (result.error) throw result.error;
-    profile = result.data;
-  }
-  renderProfile();
-}
-
-async function loadProgress() {
-  const { data, error } = await db.from("article_progress").select("article_id").eq("user_id", currentUser.id);
-  if (error) throw error;
-  completedArticles = new Set((data || []).map((row) => String(row.article_id)));
-}
-
-function renderProfile() {
-  const name = profile?.display_name || currentUser?.email || "";
-  $("#user-email").textContent = name;
-  const avatar = profile?.avatar_url
-    ? `<img src="${escapeHtml(profile.avatar_url)}" alt="" />`
-    : "👤";
-  $("#profile-avatar").innerHTML = avatar;
-  $("#profile-preview-avatar").innerHTML = avatar;
-  $("#profile-preview-email").textContent = currentUser?.email || "";
-}
-
-async function showApp(user) {
-  if (!(await isAllowed(user))) {
-    await db.auth.signOut();
-    showMessage($("#access-message"), "Ваш email ещё не добавлен в список доступа.");
-    return;
-  }
-  currentUser = user;
-  accessScreen.classList.add("hidden");
-  app.classList.remove("hidden");
-  $("#admin-button").classList.toggle("hidden", !currentMember.is_admin);
-  $("#article-add-button").classList.toggle("hidden", !currentMember.is_admin);
-  await Promise.all([loadProfile(), loadProgress()]);
-  await loadMaterials();
-  renderDashboard();
-}
-
-async function loadMaterials() {
-  const { data, error } = await db.from("articles").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: true });
-  if (error) {
-    showMessage($("#access-message"), `Не удалось загрузить материалы: ${error.message}`);
-    return;
-  }
-  materials = data || [];
-  setupNavigation();
-  renderMaterials();
-  renderDashboard();
-}
-
-$("#auth-mode-toggle").addEventListener("click", () => {
-  authMode = authMode === "password" ? "magic" : "password";
-  $("#password").classList.toggle("hidden", authMode !== "password");
-  $("#password").required = authMode === "password";
-  $("#auth-mode-toggle").textContent = authMode === "password" ? "Войти по ссылке из email" : "Войти по паролю";
-});
-
-$("#access-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const email = normalize($("#email").value);
-  const { data: sessionData } = await db.auth.getSession();
-  if (sessionData.session?.user) {
-    try {
-      await showApp(sessionData.session.user);
-    } catch (error) {
-      showMessage($("#access-message"), `Ошибка подключения: ${error.message}`);
-    }
-    return;
-  }
-  const result = authMode === "password"
-    ? await db.auth.signInWithPassword({ email, password: $("#password").value })
-    : await db.auth.signInWithOtp({ email, options: { emailRedirectTo: getAuthRedirectUrl() } });
-  const error = result.error;
-  if (authMode === "password" && error) {
-    showMessage($("#access-message"), "Не удалось войти по паролю. Если пароль ещё не задан, переключитесь на вход по ссылке из email один раз и задайте пароль в профиле.");
-    return;
-  }
-  if (error?.status === 429 || error?.message?.toLowerCase().includes("rate limit")) {
-    showMessage($("#access-message"), "Сервис временно ограничил отправку писем. Проверьте, не запрашивали ли вы письмо недавно, и повторите через несколько минут.");
-    return;
-  }
-  showMessage($("#access-message"), error ? `Не удалось отправить письмо: ${error.message}` : "Проверьте почту и перейдите по ссылке из письма.", !error);
-});
-
-$("#request-access").addEventListener("click", () => {
-  const email = normalize($("#email").value);
-  window.location.href = `mailto:?subject=${encodeURIComponent("Запрос доступа к QA Base")}&body=${encodeURIComponent(`Здравствуйте! Прошу выдать доступ к QA Base для email: ${email || "[укажите email]"}.`)}`;
-});
-
-$("#logout-button").addEventListener("click", () => db.auth.signOut());
-
-function renderMaterials() {
-  const query = normalize($("#search-input").value);
-  const filtered = materials.filter((item) => {
-    const itemSection = item.section || "theory";
-    return itemSection === activeSection
-      && (!activeCategory || item.category === activeCategory)
-      && (!showCompletedOnly || completedArticles.has(String(item.id)))
-      && `${item.title} ${item.description} ${item.category}`.toLowerCase().includes(query);
-  });
-  $("#materials-grid").innerHTML = filtered.map((item, index) => {
-    const draft = item.status === "draft";
-    const completed = completedArticles.has(String(item.id));
-    return `<button class="material-card ${draft ? "material-card--draft" : ""} ${activeArticleId === String(item.id) ? "material-card--active" : ""}" data-id="${item.id}" type="button"><span class="material-card-index">${String(index + 1).padStart(2, "0")}</span><span class="material-card-copy"><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.category)} · ${escapeHtml(item.read_time || "")}</small></span><span class="material-card-status">${completed ? "✓" : "→"}</span></button>`;
-  }).join("");
-  $("#sidebar-count").textContent = filtered.length;
-  $("#empty-state").classList.toggle("hidden", filtered.length > 0);
-  document.querySelectorAll(".material-card").forEach((card) => card.addEventListener("click", () => openArticle(card.dataset.id)));
-}
-
-function renderDashboard() {
-  const published = materials.filter((item) => item.status !== "draft");
-  const completed = published.filter((item) => completedArticles.has(String(item.id))).length;
-  const percent = published.length ? Math.round((completed / published.length) * 100) : 0;
-  const next = published.find((item) => !completedArticles.has(String(item.id)));
-  $("#progress-percent").textContent = `${percent}%`;
+function renderProgress() {
+  const percent = Math.round((completed.size / topics.length) * 100);
+  $("#progress-value").textContent = `${completed.size} из ${topics.length}`;
   $("#progress-bar").style.width = `${percent}%`;
-  $("#completed-count").textContent = completed;
-  $("#total-count").textContent = published.length;
-  $("#practice-count").textContent = published.filter((item) => item.section === "practice").length;
-  $("#next-lesson-title").textContent = next?.title || "Все материалы изучены";
-  $("#progress-caption").textContent = next
-    ? `${published.length - completed} ${published.length - completed === 1 ? "тема ждёт" : "темы ждут"} твоего внимания`
-    : "Отличный результат — база пройдена";
-  $("#dashboard-greeting").textContent = profile?.display_name
-    ? `Привет, ${profile.display_name}! Выбирай тему и превращай знания о тестировании в уверенную практику.`
-    : "Структурированная база знаний, которая помогает превратить теорию тестирования в уверенную практику.";
+  $("#progress-title").textContent = percent ? `Пройдено ${percent}% маршрута` : "Твой прогресс";
 }
 
-function setupNavigation() {
-  const sections = [
-    { id: "theory", title: "Теория тестирования", icon: "▣" },
-    { id: "practice", title: "Практика", icon: "✓" },
-  ];
-  $("#sidebar-sections").innerHTML = sections.map((section) => {
-    const categories = [...new Set(materials
-      .filter((item) => (item.section || "theory") === section.id)
-      .map((item) => item.category)
-      .filter(Boolean))];
-    return `<div class="sidebar-section"><button class="sidebar-section-button ${activeSection === section.id ? "active" : ""}" type="button" data-section="${section.id}"><span class="sidebar-section-icon">${section.icon}</span><span>${section.title}</span><strong>${materials.filter((item) => (item.section || "theory") === section.id).length}</strong></button><div class="sidebar-categories ${activeSection === section.id ? "" : "hidden"}"><button type="button" class="${!activeCategory && activeSection === section.id ? "active" : ""}" data-section="${section.id}" data-category="">Все материалы</button>${categories.map((category) => `<button type="button" class="${activeCategory === category && activeSection === section.id ? "active" : ""}" data-section="${section.id}" data-category="${escapeHtml(category)}">${escapeHtml(category)}</button>`).join("")}</div></div>`;
-  }).join("");
-  document.querySelectorAll("#sidebar-sections button").forEach((button) => button.addEventListener("click", () => {
-    activeSection = button.dataset.section;
-    activeCategory = button.dataset.category || null;
-    activeArticleId = null;
-    $("#article-content").classList.add("hidden");
-    $("#reader-empty").classList.remove("hidden");
-    setupNavigation();
-    renderMaterials();
-    $("#library").scrollIntoView({ behavior: "smooth" });
-  }));
+function renderTopicList(list = topics) {
+  $("#topic-count").textContent = `${list.length} ${list.length === 1 ? "тема" : "тем"}`;
+  $("#topic-list").innerHTML = list.length
+    ? list.map((topic) => `<button class="topic-item ${topic.id === selectedTopicId ? "active" : ""}" type="button" data-topic-id="${topic.id}"><span class="topic-index">${topic.icon}</span><span><strong>${escapeHtml(topic.title)}</strong><small>${escapeHtml(topic.description)}</small></span><span class="topic-status">${completed.has(topic.id) ? "✓" : "→"}</span></button>`).join("")
+    : '<p class="no-results">Ничего не найдено. Попробуй другой запрос.</p>';
 }
 
-$("#completed-filter").addEventListener("click", () => {
-  showCompletedOnly = !showCompletedOnly;
-  $("#completed-filter").textContent = showCompletedOnly ? "Изученные" : "Все материалы";
-  $("#completed-filter").classList.toggle("filter-button--active", showCompletedOnly);
-  renderMaterials();
-});
-
-$("#continue-learning").addEventListener("click", () => {
-  const next = materials.find((item) => item.status !== "draft" && !completedArticles.has(String(item.id)));
-  if (next) openArticle(next.id);
-  else $("#library").scrollIntoView({ behavior: "smooth" });
-});
-
-async function openArticle(id) {
-  const item = materials.find((material) => String(material.id) === String(id));
-  if (!item) return;
-  activeArticleId = String(item.id);
-  renderMaterials();
-  const completed = completedArticles.has(String(item.id));
-  $("#reader-empty").classList.add("hidden");
-  $("#article-content").classList.remove("hidden");
-  $("#article-content").innerHTML = `<button class="reader-back" type="button" id="reader-back">← Вернуться к библиотеке</button><div class="article-visual card-image--${escapeHtml(item.color || "purple")}">${item.image_url ? `<img src="${escapeHtml(item.image_url)}" alt="" class="article-image">` : `<h2>${escapeHtml(item.title)}</h2>`}</div><p class="eyebrow">${escapeHtml(item.category)} · ${escapeHtml(item.read_time || "")}${item.status === "draft" ? " · черновик" : ""}</p><h2 id="article-title">${escapeHtml(item.title)}</h2><div class="article-copy">${item.content}</div><div id="quiz-slot"></div><div class="reader-actions"><button id="complete-article-button" class="button ${completed ? "button--secondary" : "button--primary"} article-complete-button" type="button">${completed ? "✓ Материал пройден" : "Отметить как пройденное"}</button>${currentMember?.is_admin ? '<button id="edit-article-button" class="button button--secondary article-edit-button" type="button">Редактировать материал</button>' : ""}</div>`;
-  $("#reader-back").addEventListener("click", closeArticleReader);
-  $("#complete-article-button").addEventListener("click", () => markCompleted(item));
-  $("#edit-article-button")?.addEventListener("click", () => openArticleEditor(item));
-  const { data: questions, error } = await db.from("quiz_questions").select("*").eq("article_id", item.id).order("sort_order");
-  if (error) {
-    console.error("Не удалось загрузить тест:", error);
-    return;
-  }
-
-  function closeArticleReader() {
-    activeArticleId = null;
-    $("#article-content").classList.add("hidden");
-    $("#reader-empty").classList.remove("hidden");
-    renderMaterials();
-  }
-  if ((questions || []).length && item.section === "theory") {
-    $("#quiz-slot").innerHTML = `<section class="quiz" id="quiz-${item.id}"><p class="eyebrow">Проверь себя</p><h3>Мини-тест после теории</h3>${questions.map((question, index) => `<fieldset class="quiz-question" data-answer="${question.correct_option}"><legend>${index + 1}. ${escapeHtml(question.question)}</legend>${(question.options || []).map((option, optionIndex) => `<label><input type="radio" name="question-${question.id}" value="${optionIndex}" /> ${escapeHtml(option)}</label>`).join("")}<p class="quiz-result"></p></fieldset><p class="quiz-explanation hidden">${escapeHtml(question.explanation || "")}</p>`).join("")}<button class="button button--secondary quiz-check" type="button">Проверить ответы</button><p class="quiz-score"></p></section>`;
-    $(".quiz-check").addEventListener("click", () => checkQuiz(item));
-  }
-}
-
-async function markCompleted(item) {
-  const { error } = await db.from("article_progress").upsert({ user_id: currentUser.id, article_id: item.id, completed_at: new Date().toISOString() });
-  if (error) {
-    window.alert(`Не удалось сохранить прогресс: ${error.message}`);
-    return;
-  }
-  completedArticles.add(String(item.id));
-  $("#complete-article-button").textContent = "✓ Материал пройден";
-  $("#complete-article-button").className = "button button--secondary article-complete-button";
-  renderMaterials();
-  renderDashboard();
-}
-
-function checkQuiz() {
-  let score = 0;
-  let answered = 0;
-  document.querySelectorAll(".quiz-question").forEach((question) => {
-    const choice = question.querySelector("input:checked");
-    const result = question.querySelector(".quiz-result");
-    question.querySelectorAll("label").forEach((label) => label.classList.remove("is-correct", "is-wrong"));
-    if (!choice) {
-      result.textContent = "Выберите вариант.";
-      return;
-    }
-    answered += 1;
-    const isCorrect = Number(choice.value) === Number(question.dataset.answer);
-    if (isCorrect) score += 1;
-    choice.closest("label").classList.add(isCorrect ? "is-correct" : "is-wrong");
-    result.textContent = isCorrect ? "Верно!" : "Попробуйте ещё раз.";
-    question.nextElementSibling?.classList.remove("hidden");
+function renderArticle() {
+  const topic = topics.find((item) => item.id === selectedTopicId) || topics[0];
+  selectedTopicId = topic.id;
+  const isCompleted = completed.has(topic.id);
+  $("#article-view").innerHTML = `
+    <div class="article-topline"><span class="article-order">Шаг ${topic.order} из ${topics.length}</span><span class="article-complete">${isCompleted ? "Пройдено ✓" : "В процессе"}</span></div>
+    <h2>${escapeHtml(topic.title)}</h2>
+    <p class="article-lead">${escapeHtml(topic.description)}</p>
+    <div class="article-section"><h3>Короткое определение</h3><p>${escapeHtml(topic.definition)}</p></div>
+    <div class="article-section"><h3>Простыми словами</h3><p>${escapeHtml(topic.simple)}</p></div>
+    <div class="article-section"><h3>Зачем это нужно тестировщику</h3><p>${escapeHtml(topic.why)}</p></div>
+    <div class="article-section"><h3>Как это работает</h3><ol>${topic.how.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ol></div>
+    <div class="article-example"><div><span>Пример</span><p>${escapeHtml(topic.example)}</p></div><div><span>Из реального QA</span><p>${escapeHtml(topic.qa)}</p></div></div>
+    <div class="article-section"><h3>Типичные ошибки</h3><ul>${topic.mistakes.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>
+    <div class="remember-box"><strong>Что нужно запомнить</strong><p>${escapeHtml(topic.remember)}</p></div>
+    <div class="task-box"><span>Практическое задание</span><p>${escapeHtml(topic.task)}</p></div>
+    <div class="related-topics"><strong>Связанные темы</strong>${topic.related.map((title) => `<button type="button" data-related-title="${escapeHtml(title)}">${escapeHtml(title)}</button>`).join("")}</div>
+    <div class="article-navigation"><button id="previous-topic" type="button">← Предыдущая тема</button><button id="complete-topic" class="${isCompleted ? "done" : ""}" type="button">${isCompleted ? "Отметить непройденной" : "Отметить пройденной"}</button><button id="next-topic" type="button">Следующая тема →</button></div>
+  `;
+  $("#complete-topic").addEventListener("click", () => {
+    if (completed.has(topic.id)) completed.delete(topic.id); else completed.add(topic.id);
+    saveProgress(); renderProgress(); renderTopicList(); renderArticle();
   });
-  const total = document.querySelectorAll(".quiz-question").length;
-  if (answered === total) {
-    const scoreElement = $(".quiz-score");
-    scoreElement.textContent = `Результат: ${score}/${total}`;
-    scoreElement.style.color = score === total ? "#4f8b55" : "";
-  }
-}
-
-function closeModals() {
-  $("#article-modal").classList.add("hidden");
-  $("#admin-modal").classList.add("hidden");
-  $("#profile-modal").classList.add("hidden");
-}
-document.querySelectorAll("[data-close-modal], [data-close-admin], [data-close-profile]").forEach((element) => element.addEventListener("click", closeModals));
-$("#search-input").addEventListener("input", renderMaterials);
-
-$("#profile-button").addEventListener("click", () => {
-  $("#profile-name-input").value = profile?.display_name || "";
-  $("#profile-password-input").value = "";
-  $("#profile-modal").classList.remove("hidden");
-});
-
-$("#profile-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  let avatarUrl = profile?.avatar_url || null;
-  const file = $("#profile-avatar-file").files[0];
-  if (file) {
-    const extension = file.name.split(".").pop().toLowerCase() || "jpg";
-    const path = `${currentUser.id}/${crypto.randomUUID()}.${extension}`;
-    const upload = await db.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
-    if (upload.error) {
-      showMessage($("#profile-message"), `Не удалось загрузить аватар: ${upload.error.message}`);
-      return;
-    }
-    avatarUrl = db.storage.from("avatars").getPublicUrl(path).data.publicUrl;
-  }
-  const password = $("#profile-password-input").value;
-  if (password) {
-    const passwordUpdate = await db.auth.updateUser({ password });
-    if (passwordUpdate.error) {
-      showMessage($("#profile-message"), `Не удалось сохранить пароль: ${passwordUpdate.error.message}`);
-      return;
-    }
-  }
-  const { data, error } = await db.from("profiles").upsert({ id: currentUser.id, email: currentUser.email, display_name: $("#profile-name-input").value.trim(), avatar_url: avatarUrl, updated_at: new Date().toISOString() }).select().single();
-  if (error) {
-    showMessage($("#profile-message"), error.message);
-    return;
-  }
-  profile = data;
-  renderProfile();
-  showMessage($("#profile-message"), password ? "Профиль и пароль сохранены." : "Профиль сохранён.", true);
-});
-
-$("#admin-button").addEventListener("click", async () => {
-  if (!currentMember?.is_admin) return;
-  await openAdminModal("members");
-});
-$("#article-add-button").addEventListener("click", () => {
-  if (!currentMember?.is_admin) return;
-  resetArticleForm();
-  openAdminModal("article");
-  $("#article-title-input").focus();
-});
-
-async function openAdminModal(mode) {
-  $("#article-admin-section").classList.toggle("hidden", mode !== "article");
-  $("#members-admin-section").classList.toggle("hidden", mode !== "members");
-  if (mode === "members") await renderAllowedList();
-  if (mode === "article") renderAdminArticles();
-  $("#admin-modal").classList.remove("hidden");
-}
-
-function resetArticleForm() {
-  editingArticleId = null;
-  $("#article-form").reset();
-  $("#article-content-input").innerHTML = "";
-  updateArticlePreview();
-  $("#article-form-heading").textContent = "Новый материал";
-  $("#article-submit").textContent = "Опубликовать материал";
-  $("#article-cancel-edit").classList.add("hidden");
-  showMessage($("#article-message"), "");
-}
-
-function openArticleEditor(item) {
-  if (!currentMember?.is_admin) return;
-  editingArticleId = item.id;
-  $("#article-title-input").value = item.title;
-  $("#article-category-input").value = item.category;
-  $("#article-section-input").value = item.section || "theory";
-  $("#article-time-input").value = item.read_time || "";
-  $("#article-order-input").value = item.sort_order || 0;
-  $("#article-description-input").value = item.description;
-  $("#article-content-input").innerHTML = item.content;
-  updateArticlePreview();
-  $("#article-color-input").value = item.color || "purple";
-  $("#article-image-input").value = item.image_url || "";
-  $("#article-draft-input").checked = item.status === "draft";
-  $("#article-form-heading").textContent = "Редактирование материала";
-  $("#article-submit").textContent = "Сохранить изменения";
-  $("#article-cancel-edit").classList.remove("hidden");
-  $("#article-modal").classList.add("hidden");
-  openAdminModal("article");
-  $("#article-title-input").focus();
-}
-$("#article-cancel-edit").addEventListener("click", resetArticleForm);
-
-function updateArticlePreview() {
-  $("#article-live-preview").innerHTML = $("#article-content-input").innerHTML || "<p>Предпросмотр появится здесь.</p>";
-}
-
-document.querySelectorAll("[data-command]").forEach((button) => button.addEventListener("mousedown", (event) => {
-  event.preventDefault();
-  $("#article-content-input").focus();
-  document.execCommand(button.dataset.command, false, button.dataset.value || null);
-  updateArticlePreview();
-}));
-$("#article-content-input").addEventListener("input", updateArticlePreview);
-
-$("#editor-image-button").addEventListener("click", () => $("#editor-image-file").click());
-$("#editor-image-file").addEventListener("change", async () => {
-  const file = $("#editor-image-file").files[0];
-  if (!file) return;
-  const path = `${currentUser.id}/${crypto.randomUUID()}.${file.name.split(".").pop().toLowerCase() || "jpg"}`;
-  showMessage($("#article-message"), "Загрузка изображения...");
-  const upload = await db.storage.from("article-images").upload(path, file, { contentType: file.type });
-  if (upload.error) {
-    showMessage($("#article-message"), `Не удалось загрузить изображение: ${upload.error.message}`);
-    return;
-  }
-  const imageUrl = db.storage.from("article-images").getPublicUrl(path).data.publicUrl;
-  $("#article-content-input").focus();
-  document.execCommand("insertHTML", false, `<p><img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(file.name)}"></p>`);
-  $("#editor-image-file").value = "";
-  updateArticlePreview();
-  showMessage($("#article-message"), "Изображение вставлено.", true);
-});
-
-function renderAdminArticles() {
-  $("#admin-articles-list").innerHTML = `<h3>Материалы и порядок</h3>${materials.map((item, index) => `<div class="admin-article-row"><span><strong>${escapeHtml(item.title)}</strong><small>${item.status === "draft" ? "Черновик" : "Опубликован"} · порядок ${item.sort_order || 0}</small></span><span><button type="button" class="tiny-button edit-admin-article" data-id="${item.id}">Изменить</button><button type="button" class="tiny-button move-admin-article" data-id="${item.id}" data-direction="-1" ${index === 0 ? "disabled" : ""}>↑</button><button type="button" class="tiny-button move-admin-article" data-id="${item.id}" data-direction="1" ${index === materials.length - 1 ? "disabled" : ""}>↓</button><button type="button" class="tiny-button delete-admin-article" data-id="${item.id}">Удалить</button></span></div>`).join("")}`;
-  document.querySelectorAll(".edit-admin-article").forEach((button) => button.addEventListener("click", () => openArticleEditor(materials.find((item) => String(item.id) === button.dataset.id))));
-  document.querySelectorAll(".delete-admin-article").forEach((button) => button.addEventListener("click", () => deleteArticle(button.dataset.id)));
-  document.querySelectorAll(".move-admin-article").forEach((button) => button.addEventListener("click", () => moveArticle(button.dataset.id, Number(button.dataset.direction))));
-}
-
-async function deleteArticle(id) {
-  if (!window.confirm("Удалить материал и его прогресс?")) return;
-  const { error } = await db.from("articles").delete().eq("id", id);
-  if (error) window.alert(error.message);
-  else {
-    await loadMaterials();
-    renderAdminArticles();
-  }
-}
-
-async function moveArticle(id, direction) {
-  const index = materials.findIndex((item) => String(item.id) === String(id));
-  const other = materials[index + direction];
-  if (!other) return;
-  const firstOrder = materials[index].sort_order || index;
-  const secondOrder = other.sort_order || index + direction;
-  const { error } = await db.from("articles").upsert([{ id: materials[index].id, sort_order: secondOrder }, { id: other.id, sort_order: firstOrder }]);
-  if (error) window.alert(error.message);
-  else {
-    await loadMaterials();
-    renderAdminArticles();
-  }
-}
-
-async function renderAllowedList() {
-  const { data, error } = await db.from("access_members").select("id,email,is_admin").order("email");
-  if (error) {
-    showMessage($("#invite-message"), error.message);
-    return;
-  }
-  $("#allowed-list").innerHTML = (data || []).map((member) => {
-    const ownAccount = normalize(member.email) === normalize(currentUser.email);
-    const roleButton = ownAccount ? "" : `<button class="toggle-admin" data-id="${member.id}" data-value="${member.is_admin ? "false" : "true"}" type="button">${member.is_admin ? "Снять права" : "Сделать админом"}</button>`;
-    return `<li><span>${escapeHtml(member.email)}${member.is_admin ? " · админ" : ""}</span>${ownAccount ? "" : `<span>${roleButton}<button class="remove-email" data-id="${member.id}" type="button">Удалить</button></span>`}</li>`;
-  }).join("");
-  document.querySelectorAll(".remove-email").forEach((button) => button.addEventListener("click", async () => {
-    const { error: deleteError } = await db.from("access_members").delete().eq("id", button.dataset.id);
-    if (deleteError) showMessage($("#invite-message"), deleteError.message);
-    else renderAllowedList();
-  }));
-  document.querySelectorAll(".toggle-admin").forEach((button) => button.addEventListener("click", async () => {
-    const { error: updateError } = await db.from("access_members").update({ is_admin: button.dataset.value === "true" }).eq("id", button.dataset.id);
-    if (updateError) showMessage($("#invite-message"), updateError.message);
-    else renderAllowedList();
+  $("#previous-topic").addEventListener("click", () => selectTopic(Math.max(0, topic.order - 2)));
+  $("#next-topic").addEventListener("click", () => selectTopic(Math.min(topics.length - 1, topic.order)));
+  $("#article-view").querySelectorAll("[data-related-title]").forEach((button) => button.addEventListener("click", () => {
+    const next = topics.find((item) => item.title === button.dataset.relatedTitle);
+    if (next) selectTopic(topics.indexOf(next));
   }));
 }
 
-$("#invite-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const email = normalize($("#invite-email").value);
-  const { error } = await db.from("access_members").insert({ email, is_admin: false });
-  if (error) {
-    showMessage($("#invite-message"), error.code === "23505" ? "Этот email уже добавлен." : error.message);
-    return;
-  }
-  $("#invite-email").value = "";
-  showMessage($("#invite-message"), "Участник добавлен.", true);
-  await renderAllowedList();
-});
-
-$("#article-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  if (!currentMember?.is_admin) return;
-  const category = $("#article-category-input").value.trim();
-  const title = $("#article-title-input").value.trim();
-  const description = $("#article-description-input").value.trim();
-  const content = $("#article-content-input").innerHTML.trim();
-  const readTime = $("#article-time-input").value.trim();
-  if (!category || !title || !description || !content || !readTime) {
-    showMessage($("#article-message"), "Заполните название, категорию, описание, время чтения и текст материала.");
-    return;
-  }
-  let imageUrl = $("#article-image-input").value.trim() || null;
-  const file = $("#article-image-file").files[0];
-  if (file) {
-    const extension = file.name.split(".").pop().toLowerCase() || "jpg";
-    const path = `${currentUser.id}/${crypto.randomUUID()}.${extension}`;
-    const upload = await db.storage.from("article-images").upload(path, file, { contentType: file.type });
-    if (upload.error) {
-      showMessage($("#article-message"), `Не удалось загрузить изображение: ${upload.error.message}`);
-      return;
-    }
-    imageUrl = db.storage.from("article-images").getPublicUrl(path).data.publicUrl;
-  }
-  const article = {
-    category,
-    section: $("#article-section-input").value,
-    title,
-    description,
-    content,
-    read_time: readTime,
-    sort_order: Number($("#article-order-input").value) || 0,
-    status: $("#article-draft-input").checked ? "draft" : "published",
-    color: $("#article-color-input").value,
-    icon: "✦",
-    image_url: imageUrl,
-    updated_at: new Date().toISOString(),
-  };
-  const query = editingArticleId ? db.from("articles").update(article).eq("id", editingArticleId) : db.from("articles").insert(article);
-  const { error } = await query;
-  if (error) {
-    showMessage($("#article-message"), `Не удалось сохранить: ${error.message}`);
-    return;
-  }
-  const wasEditing = Boolean(editingArticleId);
-  const savedArticleId = editingArticleId;
-  resetArticleForm();
-  showMessage($("#article-message"), wasEditing ? "Изменения сохранены." : "Материал опубликован.", true);
-  await loadMaterials();
-  renderAdminArticles();
-  if (wasEditing && activeArticleId === String(savedArticleId)) {
-    await openArticle(savedArticleId);
-  }
-});
-
-let authUserHandled = null;
-async function handleAuthSession(session) {
-  if (!session?.user || authUserHandled === session.user.id) return;
-  authUserHandled = session.user.id;
-  try {
-    await showApp(session.user);
-  } catch (error) {
-    showMessage($("#access-message"), `Ошибка подключения: ${error.message}`);
-  }
+function selectTopic(index) {
+  const topic = topics[index];
+  if (!topic) return;
+  selectedTopicId = topic.id;
+  renderTopicList();
+  renderArticle();
+  $("#article-view").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-async function restoreAuthFromCallback() {
-  const queryParams = new URLSearchParams(window.location.search);
-  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-  const callbackError = queryParams.get("error_description") || queryParams.get("error")
-    || queryParams.get("error_code") || hashParams.get("error_description")
-    || hashParams.get("error") || hashParams.get("error_code");
-  if (callbackError) {
-    clearAuthCallbackUrl(Boolean(window.location.hash));
-    showAuthCallbackError(callbackError);
-    return null;
-  }
-
-  const code = queryParams.get("code");
-  if (code) {
-    const { data, error } = await db.auth.exchangeCodeForSession(code);
-    clearAuthCallbackUrl();
-    if (error) {
-      showAuthCallbackError(error);
-      return null;
-    }
-    return data.session;
-  }
-
-  const accessToken = hashParams.get("access_token");
-  const refreshToken = hashParams.get("refresh_token");
-  if (accessToken && refreshToken) {
-    const { data, error } = await db.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
-    clearAuthCallbackUrl(true);
-    if (error) {
-      showAuthCallbackError(error);
-      return null;
-    }
-    return data.session;
-  }
-  return null;
+function renderResources() {
+  $("#practice-grid").innerHTML = practiceResources.map((resource) => `<a class="resource-card" href="${resource.url}" target="_blank" rel="noreferrer"><span class="resource-type">${escapeHtml(resource.type)}</span><h3>${escapeHtml(resource.title)}</h3><p>${escapeHtml(resource.description)}</p><span class="resource-link">Открыть ресурс ↗</span></a>`).join("");
+  $("#tools-grid").innerHTML = tools.map((tool) => `<a class="tool-card" href="${tool.url}" target="_blank" rel="noreferrer"><span class="tool-category">${escapeHtml(tool.category)}</span><h3>${escapeHtml(tool.title)}</h3><p>${escapeHtml(tool.description)}</p><span class="tool-arrow">↗</span></a>`).join("");
 }
 
-db.auth.onAuthStateChange((event, session) => {
-  if (event === "SIGNED_OUT") {
-    authUserHandled = null;
-    currentUser = null;
-    currentMember = null;
-    profile = null;
-    app.classList.add("hidden");
-    accessScreen.classList.remove("hidden");
-    $("#admin-button").classList.add("hidden");
-    $("#article-add-button").classList.add("hidden");
-    $("#email").value = "";
-    $("#password").value = "";
-    return;
-  }
-  if (session?.user) setTimeout(() => handleAuthSession(session), 0);
+function searchMaterials(query) {
+  const normalized = query.trim().toLowerCase();
+  const filtered = normalized ? topics.filter((topic) => `${topic.title} ${topic.description} ${topic.definition} ${topic.simple} ${topic.why} ${topic.example} ${topic.qa} ${topic.task} ${topic.related.join(" ")}`.toLowerCase().includes(normalized)) : topics;
+  renderTopicList(filtered);
+  if (filtered.length && !filtered.some((topic) => topic.id === selectedTopicId)) selectTopic(topics.indexOf(filtered[0]));
+}
+
+$("#topic-list").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-topic-id]");
+  if (button) selectTopic(topics.findIndex((topic) => topic.id === button.dataset.topicId));
+});
+$("#search-form").addEventListener("submit", (event) => event.preventDefault());
+$("#global-search").addEventListener("input", (event) => {
+  searchMaterials(event.target.value);
+  if (event.target.value.trim()) $("#materials").scrollIntoView({ behavior: "smooth", block: "start" });
+});
+$("#reset-progress").addEventListener("click", () => {
+  completed.clear(); saveProgress(); renderProgress(); renderTopicList(); renderArticle();
+});
+$("#mobile-menu-button").addEventListener("click", () => {
+  const expanded = $("#mobile-menu-button").getAttribute("aria-expanded") === "true";
+  $("#mobile-menu-button").setAttribute("aria-expanded", String(!expanded));
+  $("#main-nav").classList.toggle("is-open", !expanded);
+});
+$("#main-nav").addEventListener("click", () => {
+  $("#main-nav").classList.remove("is-open");
+  $("#mobile-menu-button").setAttribute("aria-expanded", "false");
 });
 
-async function initializeAuth() {
-  try {
-    const callbackSession = await restoreAuthFromCallback();
-    const { data, error } = await db.auth.getSession();
-    if (error) {
-      showMessage($("#access-message"), `Ошибка восстановления сессии: ${error.message}`);
-      return;
-    }
-    await handleAuthSession(callbackSession || data.session);
-  } catch (error) {
-    showAuthCallbackError(error);
-  }
-}
-
-initializeAuth();
+renderProgress();
+renderTopicList();
+renderArticle();
+renderResources();

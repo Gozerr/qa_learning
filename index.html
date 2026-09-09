@@ -3,245 +3,109 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="QA Guide — материалы и практика для начинающих тестировщиков." />
-    <title>QA Guide</title>
+    <meta name="description" content="QA Guide — бесплатная карта знаний и практики для самостоятельного изучения тестирования ПО." />
+    <title>QA Guide — путь в тестирование</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="page-shell">
       <header class="topbar">
-        <div class="brand" aria-label="QA Guide">
+        <a class="brand" href="#home" aria-label="QA Guide — на главную">
           <span class="brand-mark">&lt;/&gt;</span>
           <span class="brand-name">QA Guide</span>
-        </div>
-
-        <nav class="nav" aria-label="Главная навигация">
-          <a href="#">Главная</a>
+        </a>
+        <button id="mobile-menu-button" class="mobile-menu-button" type="button" aria-expanded="false" aria-controls="main-nav">Меню</button>
+        <nav id="main-nav" class="nav" aria-label="Главная навигация">
+          <a href="#home">Главная</a>
           <a href="#materials">Материалы</a>
           <a href="#practice">Практика</a>
+          <a href="#tools">Инструменты</a>
           <a href="#useful">Полезное</a>
         </nav>
-
-        <div class="header-tools">
-          <button class="icon-button" aria-label="Поиск">⌕</button>
-          <button class="search-button" type="button">Поиск по темам...</button>
-        </div>
+        <form id="search-form" class="header-search" role="search">
+          <label class="sr-only" for="global-search">Поиск по материалам</label>
+          <span aria-hidden="true">⌕</span>
+          <input id="global-search" type="search" placeholder="Поиск по материалам..." autocomplete="off" />
+        </form>
       </header>
 
       <main>
-        <section class="hero">
+        <section id="home" class="hero">
           <div class="hero-copy">
-            <h1>Стань тестировщиком<br />с нуля</h1>
-            <p>
-              Понятные материалы, практические задания и ссылки на полезные ресурсы,
-              которые помогут быстро освоить основу профессии и начать применять знания на практике.
-            </p>
-            <button class="primary-button" type="button">Начать обучение <span>→</span></button>
-
-            <div class="feature-pills" aria-label="Основные разделы обучения">
-              <div class="feature-pill"><span class="pill-icon">✦</span> Теория</div>
-              <div class="feature-pill"><span class="pill-icon">/</span> Практические задания</div>
-              <div class="feature-pill"><span class="pill-icon">▣</span> Полезные ресурсы</div>
+            <p class="eyebrow eyebrow--light">Бесплатная база знаний</p>
+            <h1>QA Guide —<br />путь в тестирование</h1>
+            <p>Разберись в основах QA, двигайся по понятному плану и находи места, где можно попробовать знания на практике.</p>
+            <div class="hero-actions">
+              <a class="primary-button" href="#materials">Начать с основ <span>→</span></a>
+              <a class="secondary-button secondary-button--hero" href="#practice">Перейти к практике</a>
             </div>
+            <div class="hero-note"><span>✓</span> Не школа и не курс — самостоятельный навигатор по профессии.</div>
           </div>
-
-          <div class="hero-scene" aria-hidden="true">
-            <div class="scene-plant"></div>
-            <div class="scene-lamp"></div>
-            <div class="scene-laptop">
-              <div class="screen">
-                <div class="screen-header">
-                  <span class="dot green"></span>
-                  <span class="dot blue"></span>
-                  <span class="dot purple"></span>
-                </div>
-                <div class="screen-body">
-                  <div class="mini-card mini-card--one">Функциональность</div>
-                  <div class="mini-card mini-card--two">Тест-дизайн</div>
-                  <div class="mini-card mini-card--three">Качество</div>
-                </div>
-              </div>
-              <div class="keyboard"></div>
-            </div>
-            <div class="scene-notebook"></div>
-            <div class="scene-mug"></div>
-            <div class="scene-badge">Лучшие<br />продукты</div>
+          <div class="hero-visual" aria-hidden="true">
+            <div class="visual-grid"></div>
+            <div class="visual-card visual-card--main"><span class="visual-kicker">LEARNING PATH</span><strong>Основы<br />→ API<br />→ SQL</strong><small>11 шагов без лишнего шума</small></div>
+            <div class="visual-card visual-card--float"><span>Практика</span><strong>01</strong></div>
+            <div class="visual-dot visual-dot--one"></div>
+            <div class="visual-dot visual-dot--two"></div>
           </div>
         </section>
 
-        <section class="start-section" id="materials">
-          <div class="section-header">
-            <div class="eyebrow">Что нужно для старта</div>
-            <h2>Всё, что нужно для старта</h2>
+        <section class="intro-section">
+          <div>
+            <p class="eyebrow">Что внутри</p>
+            <h2>Сначала понять.<br />Потом попробовать.</h2>
           </div>
-
-          <div class="cards-grid">
-            <article class="info-card">
-              <div class="card-icon">▣</div>
-              <h3>Основы тестирования</h3>
-              <p>Что такое тестирование, какие виды и принципы работы в QA.</p>
-              <span class="card-arrow">→</span>
-            </article>
-
-            <article class="info-card">
-              <div class="card-icon">✦</div>
-              <h3>Тест-дизайн</h3>
-              <p>Как строить сценарии, проверять гипотезы и искать возможные дефекты.</p>
-              <span class="card-arrow">→</span>
-            </article>
-
-            <article class="info-card">
-              <div class="card-icon">&lt;/&gt;</div>
-              <h3>Технические навыки</h3>
-              <p>HTML, CSS, JavaScript, API и основы автоматизации в повседневной работе.</p>
-              <span class="card-arrow">→</span>
-            </article>
-
-            <article class="info-card">
-              <div class="card-icon">⚙</div>
-              <h3>Инструменты</h3>
-              <p>Обзор полезных инструментов для тестирования и автоматизации процессов.</p>
-              <span class="card-arrow">→</span>
-            </article>
-
-            <article class="info-card">
-              <div class="card-icon">✎</div>
-              <h3>Практика</h3>
-              <p>Смелые задачи, реальные сценарии и упражнения в формате полезных кейсов.</p>
-              <span class="card-arrow">→</span>
-            </article>
+          <div class="benefits-grid">
+            <article><span class="benefit-icon">01</span><h3>Понятная теория</h3><p>Сложные термины объясняются простым языком, с примерами и связями между темами.</p></article>
+            <article><span class="benefit-icon">02</span><h3>Понятный путь</h3><p>Иди от основ тестирования к вебу, API, SQL и автоматизации в разумном порядке.</p></article>
+            <article><span class="benefit-icon">03</span><h3>Реальная практика</h3><p>Закрепляй материал на задачах и переходи к проверенным внешним тренажёрам.</p></article>
+            <article><span class="benefit-icon">04</span><h3>Нужные инструменты</h3><p>DevTools, Postman, Git, Selenium и Playwright — с объяснением, когда они нужны.</p></article>
           </div>
         </section>
 
-        <section class="learning-section">
-          <div class="learning-header">
-            <div>
-              <div class="eyebrow eyebrow--dark">Структура обучения</div>
-              <h2>Материалы по темам</h2>
-            </div>
-            <p>
-              Теория, практика и полезные материалы, которые помогут быстрее освоить путь от новичка до уверенного специалиста.
-            </p>
+        <section id="materials" class="content-section">
+          <div class="section-heading">
+            <div><p class="eyebrow">Структура обучения</p><h2>Учебный маршрут</h2></div>
+            <p>Выбирай тему, читай статью, выполняй задание и отмечай шаг пройденным.</p>
           </div>
-
-          <div class="learning-grid" id="practice">
-            <div class="topic-list" aria-label="Темы обучения">
-              <button class="topic-item active" type="button">
-                <span class="topic-icon">▣</span>
-                <span>Тестирование и основы QA</span>
-                <span class="topic-chevron">⌄</span>
-              </button>
-              <button class="topic-item" type="button">
-                <span class="topic-icon">▤</span>
-                <span>Базы и жизненный цикл</span>
-                <span class="topic-chevron">⌄</span>
-              </button>
-              <button class="topic-item" type="button">
-                <span class="topic-icon">⌁</span>
-                <span>Тест-дизайн</span>
-                <span class="topic-chevron">⌄</span>
-              </button>
-              <button class="topic-item" type="button">
-                <span class="topic-icon">⌬</span>
-                <span>SQL для тестировщика</span>
-                <span class="topic-chevron">⌄</span>
-              </button>
-              <button class="topic-item" type="button">
-                <span class="topic-icon">◌</span>
-                <span>API и Postman</span>
-                <span class="topic-chevron">⌄</span>
-              </button>
-              <button class="topic-item" type="button">
-                <span class="topic-icon">≋</span>
-                <span>Автоматизация (Python + Selenium)</span>
-                <span class="topic-chevron">⌄</span>
-              </button>
-            </div>
-
-            <div class="resource-list" aria-label="Полезные ресурсы">
-              <article class="resource-item active">
-                <div class="resource-logo logo--blue">QA</div>
-                <div>
-                  <h3>TestObject</h3>
-                  <p>Платформа для запуска и проверки автоматизированных тестов.</p>
-                </div>
-                <span class="resource-arrow">→</span>
-              </article>
-
-              <article class="resource-item">
-                <div class="resource-logo logo--purple">L</div>
-                <div>
-                  <h3>LambdaTest</h3>
-                  <p>Платформа для кроссбраузерного тестирования и автоматизации.</p>
-                </div>
-                <span class="resource-arrow">→</span>
-              </article>
-
-              <article class="resource-item">
-                <div class="resource-logo logo--orange">QA</div>
-                <div>
-                  <h3>QAGround</h3>
-                  <p>Тренажёр для практики и закрепления важных навыков QA.</p>
-                </div>
-                <span class="resource-arrow">→</span>
-              </article>
-
-              <article class="resource-item">
-                <div class="resource-logo logo--green">C</div>
-                <div>
-                  <h3>Codewars</h3>
-                  <p>Задачи и упражнения для прокачки логики и алгоритмов.</p>
-                </div>
-                <span class="resource-arrow">→</span>
-              </article>
-
-              <article class="resource-item">
-                <div class="resource-logo logo--pink">GH</div>
-                <div>
-                  <h3>GitHub</h3>
-                  <p>Проверка процессов разработки и работа с репозиториями.</p>
-                </div>
-                <span class="resource-arrow">→</span>
-              </article>
-            </div>
+          <div class="progress-summary">
+            <div><div class="progress-label"><strong id="progress-title">Твой прогресс</strong><span id="progress-value">0 из 11</span></div><div class="progress-track"><span id="progress-bar"></span></div></div>
+            <button id="reset-progress" class="text-button" type="button">Сбросить прогресс</button>
+          </div>
+          <div class="knowledge-layout">
+            <aside class="topic-sidebar" aria-label="Учебный маршрут">
+              <div class="sidebar-title"><span>Путь QA</span><span id="topic-count">11 тем</span></div>
+              <div id="topic-list" class="topic-list"></div>
+            </aside>
+            <article id="article-view" class="article-view" aria-live="polite"></article>
           </div>
         </section>
 
-        <section class="useful-banner" id="useful">
-          <div class="banner-preview" aria-hidden="true"></div>
-          <div class="banner-copy">
-            <div class="eyebrow eyebrow--light">Полезное</div>
-            <h3>Дополнительные ресурсы</h3>
-            <p>
-              Коллекция полезных статей, чек-листов, шаблонов и материалов для закрепления знаний.
-            </p>
-          </div>
-          <button class="secondary-button" type="button">Перейти к разделу <span>→</span></button>
+        <section id="practice" class="resources-section">
+          <div class="section-heading"><div><p class="eyebrow">Где попробовать</p><h2>Практика без регистрации на курс</h2></div><p>Практические направления разделены по задачам, чтобы было понятно, что именно тренировать.</p></div>
+          <div id="practice-grid" class="resource-grid"></div>
+        </section>
+
+        <section id="tools" class="tools-section">
+          <div class="section-heading"><div><p class="eyebrow">Рабочий набор</p><h2>Инструменты тестировщика</h2></div><p>Не нужно учить всё сразу. Открывай инструмент тогда, когда он появляется в учебном маршруте.</p></div>
+          <div id="tools-grid" class="tools-grid"></div>
+        </section>
+
+        <section id="useful" class="useful-section">
+          <div><p class="eyebrow eyebrow--light">Полезное</p><h2>Сохраняй любопытство</h2><p>QA — это привычка задавать вопросы, проверять предположения и докапываться до причин.</p></div>
+          <a class="secondary-button" href="#materials">Вернуться к маршруту <span>↑</span></a>
         </section>
       </main>
 
       <footer class="site-footer">
-        <div class="brand brand--footer" aria-label="QA Guide">
-          <span class="brand-mark">&lt;/&gt;</span>
-          <span class="brand-name">QA Guide</span>
-        </div>
-
-        <nav class="nav footer-nav" aria-label="Дополнительная навигация">
-          <a href="#">Главная</a>
-          <a href="#materials">Материалы</a>
-          <a href="#practice">Практика</a>
-          <a href="#useful">Полезное</a>
-        </nav>
-
-        <div class="socials" aria-label="Социальные сети">
-          <span>◉</span>
-          <span>◌</span>
-          <span>✦</span>
-        </div>
+        <a class="brand brand--footer" href="#home"><span class="brand-mark">&lt;/&gt;</span><span class="brand-name">QA Guide</span></a>
+        <span>Бесплатная карта знаний для самостоятельного изучения QA</span>
+        <span>2026</span>
       </footer>
     </div>
+    <script src="app.js"></script>
   </body>
 </html>
