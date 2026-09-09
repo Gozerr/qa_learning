@@ -3,103 +3,245 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="QA Base — закрытая база теоретических материалов для тестировщиков." />
-    <title>QA Base — база знаний</title>
+    <meta name="description" content="QA Guide — материалы и практика для начинающих тестировщиков." />
+    <title>QA Guide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div id="access-screen" class="access-screen">
-      <div class="access-glow access-glow--one"></div>
-      <div class="access-glow access-glow--two"></div>
-      <main class="access-card">
-        <div class="brand brand--center"><span class="brand-mark">✓</span><span>QA<span class="brand-accent">Base</span></span></div>
-        <p class="eyebrow">Закрытая база знаний</p>
-        <h1>Расти как QA,<br /><em>системно.</em></h1>
-        <p class="access-description">Теория, практические заметки и полезные материалы в одном месте.</p>
-        <form id="access-form" class="access-form">
-          <label for="email">Ваш email</label>
-          <div class="auth-fields">
-            <input id="email" type="email" placeholder="you@example.com" autocomplete="email" required />
-            <input id="password" type="password" placeholder="Пароль" autocomplete="current-password" minlength="6" required />
-          </div>
-          <div class="input-with-action">
-            <button class="button button--primary" type="submit">Войти <span>→</span></button>
-          </div>
-          <p id="access-message" class="form-message" role="status"></p>
-        </form>
-        <button id="auth-mode-toggle" class="text-button" type="button">Войти по ссылке из email</button>
-        <button id="request-access" class="text-button" type="button">Запросить доступ <span>↗</span></button>
-        <p class="access-note">Доступ выдаётся персонально. Если вы уже получили приглашение, используйте тот же email.</p>
-      </main>
-      <p class="access-footer">QA Base · закрытый учебный проект</p>
-    </div>
-
-    <div id="app" class="app hidden">
+    <div class="page-shell">
       <header class="topbar">
-        <a class="brand" href="#" aria-label="QA Base — на главную"><span class="brand-mark">✓</span><span>QA<span class="brand-accent">Base</span></span></a>
-        <nav class="topnav" aria-label="Основная навигация">
-          <a class="topnav-link" href="#about">О базе</a>
+        <div class="brand" aria-label="QA Guide">
+          <span class="brand-mark">&lt;/&gt;</span>
+          <span class="brand-name">QA Guide</span>
+        </div>
+
+        <nav class="nav" aria-label="Главная навигация">
+          <a href="#">Главная</a>
+          <a href="#materials">Материалы</a>
+          <a href="#practice">Практика</a>
+          <a href="#useful">Полезное</a>
         </nav>
-        <div class="user-menu">
-          <button id="article-add-button" class="add-button hidden" type="button" title="Добавить материал" aria-label="Добавить материал">+</button>
-          <button id="admin-button" class="icon-button hidden" type="button" title="Управление доступом" aria-label="Управление доступом">⚙</button>
-          <button id="profile-button" class="profile-chip" type="button" title="Профиль"><span id="profile-avatar" class="avatar avatar--small">👤</span><span id="user-email" class="user-email"></span></button>
-          <button id="logout-button" class="logout-button" type="button">Выйти</button>
+
+        <div class="header-tools">
+          <button class="icon-button" aria-label="Поиск">⌕</button>
+          <button class="search-button" type="button">Поиск по темам...</button>
         </div>
       </header>
 
       <main>
-        <section class="hero dashboard-hero" id="materials">
+        <section class="hero">
           <div class="hero-copy">
-            <p class="eyebrow">Твой учебный кабинет <span class="wave">✦</span></p>
-            <h1>Проверяй гипотезы.<br /><span>Расти системно.</span></h1>
-            <p id="dashboard-greeting" class="hero-description">Структурированная база знаний, которая помогает превратить теорию тестирования в уверенную практику.</p>
-            <div class="hero-actions"><a href="#library" class="button button--dark">Открыть библиотеку <span>↓</span></a><button id="continue-learning" class="button button--ghost" type="button">Продолжить обучение <span>→</span></button></div>
+            <h1>Стань тестировщиком<br />с нуля</h1>
+            <p>
+              Понятные материалы, практические задания и ссылки на полезные ресурсы,
+              которые помогут быстро освоить основу профессии и начать применять знания на практике.
+            </p>
+            <button class="primary-button" type="button">Начать обучение <span>→</span></button>
+
+            <div class="feature-pills" aria-label="Основные разделы обучения">
+              <div class="feature-pill"><span class="pill-icon">✦</span> Теория</div>
+              <div class="feature-pill"><span class="pill-icon">/</span> Практические задания</div>
+              <div class="feature-pill"><span class="pill-icon">▣</span> Полезные ресурсы</div>
+            </div>
           </div>
-          <div class="progress-panel">
-            <div class="progress-panel-head"><span>Твой прогресс</span><strong id="progress-percent">0%</strong></div>
-            <div class="progress-track"><span id="progress-bar"></span></div>
-            <p id="progress-caption">Начни с первого материала в библиотеке</p>
-            <div class="progress-stats"><div><strong id="completed-count">0</strong><span>изучено</span></div><div><strong id="total-count">0</strong><span>материалов</span></div><div><strong id="practice-count">0</strong><span>практика</span></div></div>
-            <div class="next-lesson"><span class="next-lesson-icon">↗</span><div><small>Следующая тема</small><strong id="next-lesson-title">Выберите материал</strong></div></div>
+
+          <div class="hero-scene" aria-hidden="true">
+            <div class="scene-plant"></div>
+            <div class="scene-lamp"></div>
+            <div class="scene-laptop">
+              <div class="screen">
+                <div class="screen-header">
+                  <span class="dot green"></span>
+                  <span class="dot blue"></span>
+                  <span class="dot purple"></span>
+                </div>
+                <div class="screen-body">
+                  <div class="mini-card mini-card--one">Функциональность</div>
+                  <div class="mini-card mini-card--two">Тест-дизайн</div>
+                  <div class="mini-card mini-card--three">Качество</div>
+                </div>
+              </div>
+              <div class="keyboard"></div>
+            </div>
+            <div class="scene-notebook"></div>
+            <div class="scene-mug"></div>
+            <div class="scene-badge">Лучшие<br />продукты</div>
           </div>
         </section>
 
-        <section class="learning-section" id="library">
-          <aside class="library-sidebar">
-            <div class="sidebar-heading"><div><p class="eyebrow">Библиотека</p><h2>Учебный план</h2></div><span id="sidebar-count" class="sidebar-count">0</span></div>
-            <label class="search sidebar-search"><span>⌕</span><input id="search-input" type="search" placeholder="Найти тему..." /></label>
-            <nav id="sidebar-sections" class="sidebar-sections" aria-label="Разделы библиотеки"></nav>
-            <div class="sidebar-filters"><button id="completed-filter" class="filter-button" type="button">Все материалы</button></div>
-            <div id="category-filters" class="category-filters hidden"></div>
-            <div id="materials-grid" class="materials-list"></div>
-            <p id="empty-state" class="empty-state hidden">Материалы не найдены.</p>
-          </aside>
-          <article id="article-reader" class="article-reader">
-            <div id="reader-empty" class="reader-empty"><span class="reader-empty-icon">✦</span><p class="eyebrow">Выберите тему</p><h2>Начните изучение</h2><p>Выберите материал в библиотеке слева, чтобы открыть его в удобном режиме чтения.</p></div>
-            <div id="article-content" class="reader-content hidden"></div>
-          </article>
+        <section class="start-section" id="materials">
+          <div class="section-header">
+            <div class="eyebrow">Что нужно для старта</div>
+            <h2>Всё, что нужно для старта</h2>
+          </div>
+
+          <div class="cards-grid">
+            <article class="info-card">
+              <div class="card-icon">▣</div>
+              <h3>Основы тестирования</h3>
+              <p>Что такое тестирование, какие виды и принципы работы в QA.</p>
+              <span class="card-arrow">→</span>
+            </article>
+
+            <article class="info-card">
+              <div class="card-icon">✦</div>
+              <h3>Тест-дизайн</h3>
+              <p>Как строить сценарии, проверять гипотезы и искать возможные дефекты.</p>
+              <span class="card-arrow">→</span>
+            </article>
+
+            <article class="info-card">
+              <div class="card-icon">&lt;/&gt;</div>
+              <h3>Технические навыки</h3>
+              <p>HTML, CSS, JavaScript, API и основы автоматизации в повседневной работе.</p>
+              <span class="card-arrow">→</span>
+            </article>
+
+            <article class="info-card">
+              <div class="card-icon">⚙</div>
+              <h3>Инструменты</h3>
+              <p>Обзор полезных инструментов для тестирования и автоматизации процессов.</p>
+              <span class="card-arrow">→</span>
+            </article>
+
+            <article class="info-card">
+              <div class="card-icon">✎</div>
+              <h3>Практика</h3>
+              <p>Смелые задачи, реальные сценарии и упражнения в формате полезных кейсов.</p>
+              <span class="card-arrow">→</span>
+            </article>
+          </div>
         </section>
 
-        <section class="about-section" id="about">
-          <div><p class="eyebrow">Как это работает</p><h2>Учись в своём ритме.</h2></div>
-          <div class="about-points"><div><span>01</span><p><strong>Выбери тему</strong><br />Начни с основ или углубись в знакомый раздел.</p></div><div><span>02</span><p><strong>Разберись в сути</strong><br />Короткие материалы без лишнего шума.</p></div><div><span>03</span><p><strong>Примени на практике</strong><br />Проверяй знания на реальных кейсах.</p></div></div>
+        <section class="learning-section">
+          <div class="learning-header">
+            <div>
+              <div class="eyebrow eyebrow--dark">Структура обучения</div>
+              <h2>Материалы по темам</h2>
+            </div>
+            <p>
+              Теория, практика и полезные материалы, которые помогут быстрее освоить путь от новичка до уверенного специалиста.
+            </p>
+          </div>
+
+          <div class="learning-grid" id="practice">
+            <div class="topic-list" aria-label="Темы обучения">
+              <button class="topic-item active" type="button">
+                <span class="topic-icon">▣</span>
+                <span>Тестирование и основы QA</span>
+                <span class="topic-chevron">⌄</span>
+              </button>
+              <button class="topic-item" type="button">
+                <span class="topic-icon">▤</span>
+                <span>Базы и жизненный цикл</span>
+                <span class="topic-chevron">⌄</span>
+              </button>
+              <button class="topic-item" type="button">
+                <span class="topic-icon">⌁</span>
+                <span>Тест-дизайн</span>
+                <span class="topic-chevron">⌄</span>
+              </button>
+              <button class="topic-item" type="button">
+                <span class="topic-icon">⌬</span>
+                <span>SQL для тестировщика</span>
+                <span class="topic-chevron">⌄</span>
+              </button>
+              <button class="topic-item" type="button">
+                <span class="topic-icon">◌</span>
+                <span>API и Postman</span>
+                <span class="topic-chevron">⌄</span>
+              </button>
+              <button class="topic-item" type="button">
+                <span class="topic-icon">≋</span>
+                <span>Автоматизация (Python + Selenium)</span>
+                <span class="topic-chevron">⌄</span>
+              </button>
+            </div>
+
+            <div class="resource-list" aria-label="Полезные ресурсы">
+              <article class="resource-item active">
+                <div class="resource-logo logo--blue">QA</div>
+                <div>
+                  <h3>TestObject</h3>
+                  <p>Платформа для запуска и проверки автоматизированных тестов.</p>
+                </div>
+                <span class="resource-arrow">→</span>
+              </article>
+
+              <article class="resource-item">
+                <div class="resource-logo logo--purple">L</div>
+                <div>
+                  <h3>LambdaTest</h3>
+                  <p>Платформа для кроссбраузерного тестирования и автоматизации.</p>
+                </div>
+                <span class="resource-arrow">→</span>
+              </article>
+
+              <article class="resource-item">
+                <div class="resource-logo logo--orange">QA</div>
+                <div>
+                  <h3>QAGround</h3>
+                  <p>Тренажёр для практики и закрепления важных навыков QA.</p>
+                </div>
+                <span class="resource-arrow">→</span>
+              </article>
+
+              <article class="resource-item">
+                <div class="resource-logo logo--green">C</div>
+                <div>
+                  <h3>Codewars</h3>
+                  <p>Задачи и упражнения для прокачки логики и алгоритмов.</p>
+                </div>
+                <span class="resource-arrow">→</span>
+              </article>
+
+              <article class="resource-item">
+                <div class="resource-logo logo--pink">GH</div>
+                <div>
+                  <h3>GitHub</h3>
+                  <p>Проверка процессов разработки и работа с репозиториями.</p>
+                </div>
+                <span class="resource-arrow">→</span>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="useful-banner" id="useful">
+          <div class="banner-preview" aria-hidden="true"></div>
+          <div class="banner-copy">
+            <div class="eyebrow eyebrow--light">Полезное</div>
+            <h3>Дополнительные ресурсы</h3>
+            <p>
+              Коллекция полезных статей, чек-листов, шаблонов и материалов для закрепления знаний.
+            </p>
+          </div>
+          <button class="secondary-button" type="button">Перейти к разделу <span>→</span></button>
         </section>
       </main>
-      <footer class="footer"><span>QA<span class="brand-accent">Base</span> · 2026</span><span>Сделано для тех, кто задаёт вопросы</span></footer>
-    </div>
 
-    <div id="article-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="article-title"><div class="modal-backdrop" data-close-modal></div></div>
-    <div id="admin-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="admin-title">
-      <div class="modal-backdrop" data-close-admin></div><article class="modal-card admin-card"><button class="modal-close" type="button" data-close-admin aria-label="Закрыть">×</button><p class="eyebrow">Панель владельца</p><h2 id="admin-title">Управление базой</h2><div id="article-admin-section" class="admin-section"><h3 id="article-form-heading">Новый материал</h3><form id="article-form" class="article-form"><input id="article-title-input" type="text" placeholder="Название материала" required /><div class="form-row"><select id="article-section-input"><option value="theory">Теория тестирования</option><option value="practice">Практика</option></select>      <input id="article-category-input" type="text" placeholder="Раздел, например Виды тестирования" required /></div><div class="form-row"><input id="article-time-input" type="text" placeholder="Время, например 10 мин" required /><input id="article-order-input" type="number" min="0" placeholder="Порядок (0 — первый)" /></div><textarea id="article-description-input" placeholder="Короткое описание" rows="2" required></textarea><div class="editor-toolbar" role="toolbar" aria-label="Форматирование текста"><button type="button" data-command="bold"><b>B</b></button><button type="button" data-command="italic"><i>I</i></button><button type="button" data-command="underline"><u>U</u></button><button type="button" data-command="formatBlock" data-value="h3">Заголовок</button><button type="button" data-command="insertUnorderedList">• Список</button><button type="button" id="editor-image-button">▧ Картинка</button><label class="editor-image-label">или загрузите<input id="editor-image-file" type="file" accept="image/*" /></label></div><div id="article-content-input" class="rich-editor" contenteditable="true" role="textbox" aria-label="Содержание материала" data-placeholder="Напишите материал здесь..."></div><div class="editor-preview-label">Предпросмотр</div><div id="article-live-preview" class="article-live-preview"></div><div class="form-row"><select id="article-color-input"><option value="purple">Фиолетовый</option><option value="yellow">Жёлтый</option><option value="blue">Синий</option><option value="pink">Розовый</option><option value="green">Зелёный</option><option value="orange">Оранжевый</option></select><input id="article-image-input" type="url" placeholder="Обложка материала (необязательно)" /></div><label class="upload-label">Или загрузите обложку <input id="article-image-file" type="file" accept="image/*" /></label><label class="checkbox-label"><input id="article-draft-input" type="checkbox" /> Сохранить как черновик</label><div class="article-actions"><button id="article-submit" class="button button--primary" type="submit">Опубликовать материал</button><button id="article-cancel-edit" class="button button--secondary hidden" type="button">Отменить редактирование</button></div><p id="article-message" class="form-message" role="status"></p></form><div id="admin-articles-list" class="admin-articles-list"></div></div><div id="members-admin-section" class="admin-section"><h3>Участники</h3><p class="modal-lead">Добавленные email получают доступ сразу после входа по magic link.</p><form id="invite-form" class="invite-form"><input id="invite-email" type="email" placeholder="email участника" required /><button class="button button--primary" type="submit">Добавить</button></form><p id="invite-message" class="form-message" role="status"></p><ul id="allowed-list" class="allowed-list"></ul></div></article>
+      <footer class="site-footer">
+        <div class="brand brand--footer" aria-label="QA Guide">
+          <span class="brand-mark">&lt;/&gt;</span>
+          <span class="brand-name">QA Guide</span>
+        </div>
+
+        <nav class="nav footer-nav" aria-label="Дополнительная навигация">
+          <a href="#">Главная</a>
+          <a href="#materials">Материалы</a>
+          <a href="#practice">Практика</a>
+          <a href="#useful">Полезное</a>
+        </nav>
+
+        <div class="socials" aria-label="Социальные сети">
+          <span>◉</span>
+          <span>◌</span>
+          <span>✦</span>
+        </div>
+      </footer>
     </div>
-    <div id="profile-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="profile-title">
-      <div class="modal-backdrop" data-close-profile></div><article class="modal-card profile-card"><button class="modal-close" type="button" data-close-profile aria-label="Закрыть">×</button><p class="eyebrow">Ваш профиль</p><h2 id="profile-title">Настройки профиля</h2><form id="profile-form" class="profile-form"><div class="profile-preview"><span id="profile-preview-avatar" class="avatar avatar--large">👤</span><div><strong id="profile-preview-email"></strong><p>Имя и аватар видны только участникам базы.</p></div></div><label>Имя<input id="profile-name-input" type="text" maxlength="80" placeholder="Как к вам обращаться?" /></label><label>Аватар<input id="profile-avatar-file" type="file" accept="image/*" /></label><label>Пароль для входа<input id="profile-password-input" type="password" minlength="6" autocomplete="new-password" placeholder="Оставьте пустым, чтобы не менять" /></label><button class="button button--primary" type="submit">Сохранить профиль</button><p id="profile-message" class="form-message" role="status"></p></form></article>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="app.js"></script>
   </body>
 </html>
